@@ -27,9 +27,11 @@ class BlocProvider<T extends Bloc> extends StatefulWidget {
     return T;
   }
 
-  static T of<T extends Bloc>(BuildContext context) {
-    _InheritedWidget<T> widget =
-        context.inheritFromWidgetOfExactType(_type<_InheritedWidget<T>>());
+  static T of<T extends Bloc>(BuildContext context,
+      [bool notifyOnChange = true]) {
+    _InheritedWidget<T> widget = notifyOnChange
+        ? context.inheritFromWidgetOfExactType(_type<_InheritedWidget<T>>())
+        : context.ancestorWidgetOfExactType(_type<_InheritedWidget<T>>());
     return widget?.bloc;
   }
 }
@@ -42,12 +44,18 @@ class _State<T extends Bloc> extends State<BlocProvider<T>> {
     // TODO: implement initState
     super.initState();
     bloc = widget.blocBuilder(context);
+    bloc.addListener(_setState);
     bloc.onInit();
+  }
+
+  void _setState() {
+    setState(() {});
   }
 
   @override
   void dispose() {
     widget.onDispose?.call();
+    bloc.removeListener(_setState);
     bloc.onDispose();
     super.dispose();
   }
@@ -64,8 +72,11 @@ class _State<T extends Bloc> extends State<BlocProvider<T>> {
 
 class BlocConsumer<T extends Bloc> extends StatelessWidget {
   final WidgetBuilder<T> builder;
+  final bool notifyOnChange;
 
-  const BlocConsumer({Key key, @required this.builder}) : super(key: key);
+  const BlocConsumer(
+      {Key key, @required this.builder, this.notifyOnChange = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +92,6 @@ class _InheritedWidget<T extends Bloc> extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_InheritedWidget<T> oldWidget) {
-    print("updateShouldNotify");
-    return oldWidget.bloc != bloc;
+    return true;
   }
 }

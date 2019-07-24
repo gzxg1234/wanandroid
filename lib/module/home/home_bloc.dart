@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wanandroid/base/base_bloc.dart';
@@ -14,6 +16,8 @@ class HomeBloc extends BaseBloc {
   ValueNotifier<List<ArticleEntity>> _list = ValueNotifier([]);
   ValueNotifier<int> _currentBanner = ValueNotifier(0);
 
+  Timer autoTurningTimer;
+
   int _page = -1;
 
   ValueListenable<StateValue> get state => _state;
@@ -21,6 +25,7 @@ class HomeBloc extends BaseBloc {
   ValueListenable<List<BannerEntity>> get bannerData => _bannerData;
 
   ValueListenable<List<ArticleEntity>> get list => _list;
+
   ValueListenable<int> get currentBanner => _currentBanner;
 
   @override
@@ -51,11 +56,13 @@ class HomeBloc extends BaseBloc {
 
     _page = page;
     if (page == 0) {
+      await Future.delayed(Duration(seconds: 2));
+      _currentBanner.value = 0;
       _bannerData.value = homeData[0] ?? [];
     }
 
     PageData<ArticleEntity> articleData = homeData[1];
-    if (page == 0 && reload) {
+    if (page == 0) {
       _list.value = articleData.datas;
     } else {
       _list.value = []..addAll(_list.value)..addAll(articleData.datas);
@@ -77,7 +84,7 @@ class HomeBloc extends BaseBloc {
     _currentBanner.value = value;
   }
 
-  Future<void> refresh() async{
+  Future<void> refresh() async {
     await loadData(0, false);
   }
 }

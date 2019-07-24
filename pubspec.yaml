@@ -27,6 +27,7 @@ dependencies:
   dio: ^2.1.13
   fluttertoast: ^3.1.0
   json_annotation: ^2.4.0
+  cached_network_image: 1.1.1
 #  rxdart: ^0.22.0
 
 dev_dependencies:

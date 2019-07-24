@@ -9,13 +9,16 @@ class LoadMoreListView extends StatefulWidget {
   final IndexedWidgetBuilder itemBuilder;
   final EdgeInsetsGeometry padding;
   final LoadMoreCallback loadMoreCallback;
+  final IndexedWidgetBuilder separatorBuilder;
 
   const LoadMoreListView(
       {Key key,
       @required this.itemCount,
       @required this.loadMoreViewBuilder,
       @required this.itemBuilder,
-      this.loadMoreCallback, this.padding})
+      this.loadMoreCallback,
+      this.padding,
+      this.separatorBuilder})
       : super(key: key);
 
   @override
@@ -57,7 +60,10 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
   Widget build(BuildContext context) {
     // TODO: implement build
     bool enableLoadMore = widget.loadMoreCallback != null;
-    return ListView.builder(
+    return ListView.separated(
+      controller: ScrollController(),
+      separatorBuilder:
+          widget.separatorBuilder ?? (context, index) => Offstage(),
       padding: widget.padding,
       itemCount: enableLoadMore ? widget.itemCount + 1 : widget.itemCount,
       itemBuilder: (context, index) {
@@ -65,6 +71,7 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
           if (index == widget.itemCount) {
             if (state == LoadMoreState.Error) {
               return GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   onTap: () {
                     setState(() {
                       state = LoadMoreState.Completed;
