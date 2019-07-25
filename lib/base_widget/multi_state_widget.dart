@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:wanandroid/util/auto_size.dart';
 
 import '../r.dart';
 
@@ -76,15 +77,15 @@ class _LoadingState extends State<_Loading>
               angle: _animation.value.toDouble(),
               child: Image.asset(R.assetsImgIcLoading,
                   color: Theme.of(context).primaryColor,
-                  width: 40,
-                  height: 40,
+                  width: size(40),
+                  height: size(40),
                   fit: BoxFit.fitWidth)),
           Container(
-            margin: EdgeInsets.only(top: 16),
+            margin: EdgeInsets.only(top: size(16)),
             child: Text(
               "努力加载中...",
               style: TextStyle(
-                  color: Theme.of(context).primaryColor, fontSize: 14),
+                  color: Theme.of(context).primaryColor, fontSize: size(14)),
             ),
           )
         ],
@@ -115,15 +116,15 @@ class _Error extends StatelessWidget {
             Image.asset(
               R.assetsImgIcFailed,
               color: Color(0xff333333),
-              width: 80,
-              height: 80,
+              width: size(80),
+              height: size(80),
             ),
             Container(
-              margin: EdgeInsets.only(top: 16),
+              margin: EdgeInsets.only(top: size(16)),
               child: Text(
                 "加载失败~\n点击重新加载",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xff333333), fontSize: 14),
+                style: TextStyle(color: Color(0xff333333), fontSize: size(14)),
               ),
             )
           ],

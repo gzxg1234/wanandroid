@@ -27,29 +27,15 @@ class _State extends State<CatPage> with AutomaticKeepAliveClientMixin {
     super.build(context);
     return BaseBlocProvider<CatBloc>(
       blocBuilder: (BuildContext context) {
-        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: Colors.transparent,statusBarIconBrightness: Brightness.dark));
         return CatBloc();
       },
-      child: SafeArea(
-        child: Container(
-          color: Colors.blue,
-          child: Column(
-            children: <Widget>[
-              CommonButton(
-                "修改为夜间模式",
-                onPressed: (){
-                  BlocProvider.of<AppBloc>(context).changeTheme(DarkTheme());
-                },
-              ),
-              CommonButton(
-                "正常模式",
-                onPressed: (){
-                  BlocProvider.of<AppBloc>(context).changeTheme(AppTheme());
-                },
-              )
-            ],
-          ),
-        ),
+      child: BlocConsumer<CatBloc>(
+        builder: (context,bloc){
+          return Column(
+            mainAxisSize: MainAxisSize.max,
+
+          );
+        },
       ),
     );
   }

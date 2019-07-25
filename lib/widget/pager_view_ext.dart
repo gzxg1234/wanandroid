@@ -68,7 +68,7 @@ class _State extends State<ViewPager> {
 
   void startAutoScroll() {
     stopAutoScroll();
-    if (widget.itemCount > 1 && widget.autoTurningTime != null && false) {
+    if (widget.itemCount > 1 && widget.autoTurningTime != null) {
       autoTurningTimer = Timer.periodic(
           Duration(milliseconds: widget.autoTurningTime), (timer) {
         widget.controller.animateToPage(widget.controller.realPageInt + 1,
@@ -131,7 +131,6 @@ class _State extends State<ViewPager> {
         _itemBuilderWrapper(widget.itemBuilder, widget.itemCount, widget.cycle);
     final itemCount = _expandItemCount(widget.itemCount);
 
-    print("${controller.toString()},${controller.initialPage}");
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
         if (n is UserScrollNotification) {
@@ -169,7 +168,8 @@ class PageControllerExt extends PageController {
     double viewportFraction = 1.0,
   }) : super(
             initialPage: () {
-              print("${initialPage.toString()}，${itemCount * ITEM_COUNT_RATIO ~/ 2}");
+              print(
+                  "${initialPage.toString()}，${itemCount * ITEM_COUNT_RATIO ~/ 2}");
               return cycle
                   ? itemCount * ITEM_COUNT_RATIO ~/ 2 + initialPage
                   : initialPage;

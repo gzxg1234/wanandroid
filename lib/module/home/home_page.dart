@@ -2,17 +2,21 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:wanandroid/app/app.dart';
-import 'package:wanandroid/app/app_bloc.dart';
+import 'package:wanandroid/app/hot_word_bloc.dart';
 import 'package:wanandroid/base/base_page.dart';
 import 'package:wanandroid/base_widget/base_load_more_view_builder.dart';
 import 'package:wanandroid/base_widget/multi_state_widget.dart';
 import 'package:wanandroid/bloc/bloc_provider.dart';
 import 'package:wanandroid/bloc/builders.dart';
+import 'package:wanandroid/component/item_article.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
+import 'package:wanandroid/data/bean/bean.dart';
+import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/widget/load_more_list_view.dart';
 import 'package:wanandroid/widget/page_indicator.dart';
 import 'package:wanandroid/widget/pager_view_ext.dart';
 
+import '../../r.dart';
 import 'home_bloc.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,6 +33,15 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Future.microtask(() {
+      BlocProvider.of<HotWordBloc>(context).refresh();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     return BaseBlocProvider(
@@ -38,7 +51,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
       child: BlocConsumer<HomeBloc>(
         builder: (context, bloc) {
           return Material(
-            color: BlocProvider.of<AppBloc>(context).theme.backgroundColor,
+            color: MyApp.getTheme(context).backgroundColor,
             child: Column(
               children: <Widget>[
                 buildTopBar(context, bloc),
@@ -68,30 +81,49 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
       decoration: BoxDecoration(color: MyApp.getTheme(context).primaryColor),
       child: SafeArea(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          constraints: BoxConstraints.expand(height: 50),
+          padding: EdgeInsets.symmetric(horizontal: size(16)),
+          constraints: BoxConstraints.expand(height: size(50)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Text(
-                "玩安卓",
-                style: TextStyle(
-                    color: MyApp.getTheme(context).textColorPrimaryInverse,
-                    fontSize: 16),
+              Image(
+                image: AssetImage(R.assetsImgLogo),
+                height: size(30),
+                fit: BoxFit.fitHeight,
+                color: MyApp.getTheme(context).iconColor,
               ),
               Expanded(
                 child: Container(
-                  height: 32,
-                  margin: EdgeInsets.only(left: 16),
+                  height: size(32),
+                  padding: EdgeInsets.symmetric(horizontal: size(8)),
+                  margin: EdgeInsets.only(left: size(16)),
                   decoration: BoxDecoration(
                       color: Colors.white30,
-                      borderRadius: BorderRadius.circular(4)),
+                      borderRadius: BorderRadius.circular(size(4))),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Icon(Icons.search,
                           color:
                               MyApp.getTheme(context).textColorPrimaryInverse),
+                      ValueListenableBuilder<List<HotWordEntity>>(
+                        valueListenable:
+                            BlocProvider.of<HotWordBloc>(context).hotWordList,
+                        builder: (context, list, _) {
+                          String wordString =
+                              list.map((e) => e.name).toList().join(",");
+                          return Expanded(
+                            child: Text(
+                              "${list.isEmpty ? "搜索" : wordString}",
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: MyApp.getTheme(context)
+                                      .textColorPrimaryInverse,
+                                  fontSize: size(14)),
+                            ),
+                          );
+                        },
+                      )
                     ],
                   ),
                 ),
@@ -105,7 +137,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
   Widget buildContent(BuildContext context, HomeBloc bloc) {
     return RefreshIndicator(
-      displacement: 40,
+      displacement: size(40),
       onRefresh: bloc.refresh,
       child: ValueListenableBuilder<List<ArticleEntity>>(
           valueListenable: bloc.list,
@@ -117,75 +149,14 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 return bloc.loadMore();
               },
               separatorBuilder: (c, index) => SizedBox(
-                height: 10,
+                height: size(10),
               ),
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return buildBanner(bloc);
                 }
-                AppBloc appBloc = BlocProvider.of<AppBloc>(context);
                 var item = list[index - 1];
-                return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4)),
-                    color: appBloc.theme.cardColor,
-                    margin: EdgeInsets.symmetric(horizontal: 16),
-                    child: InkWell(
-                      onTap: () {},
-                      borderRadius: BorderRadius.circular(4),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              item.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: appBloc.theme.textColorPrimary),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 12),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: <Widget>[
-                                  Text("作者:${item.author}",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          color: appBloc
-                                              .theme.textColorSecondary)),
-                                  Container(
-                                    margin: EdgeInsets.only(left: 16),
-                                    child: Text("分类:${item.chapterName}",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: appBloc
-                                                .theme.textColorSecondary)),
-                                  ),
-                                  Expanded(
-                                    child: Text(item.niceDate,
-                                        textAlign: TextAlign.end,
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: appBloc
-                                                .theme.textColorSecondary)),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ));
+                return ArticleItem(item);
               },
               loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
             );
@@ -197,7 +168,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
     return Column(
       children: <Widget>[
         Padding(
-          padding: EdgeInsets.only(top: 16),
+          padding: EdgeInsets.only(top: size(16)),
           child: AspectRatio(
             aspectRatio: 2.2,
             child: Stack(
@@ -205,22 +176,34 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 MultiValueListenableBuilder(
                     valueListenableList: [bloc.bannerData, bloc.currentBanner],
                     builder: (context, values, child) {
+                      PageControllerExt controller = PageControllerExt(
+                          cycle: true, itemCount: values[0].length);
+                      Future.microtask(() {
+                        controller.jumpToPage(values[1]);
+                      });
                       return ViewPager(
                         cycle: true,
                         autoTurningTime: 5000,
                         onPageChanged: bloc.bannerChanged,
                         itemCount: values[0].length,
-                        controller: PageControllerExt(
-                            cycle: true, itemCount: values[0].length),
+                        controller: controller,
                         itemBuilder: (context, index) {
-                          return Container(
-                              margin: EdgeInsets.symmetric(horizontal: 14),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: CachedNetworkImage(
-                                    imageUrl: values[0][index].imagePath,
-                                    fit: BoxFit.cover),
-                              ));
+                          BannerEntity item = values[0][index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, Routes.WEB,
+                                  arguments: {Routes.WEB_ARG_URL: item.url});
+                            },
+                            child: Container(
+                                margin:
+                                    EdgeInsets.symmetric(horizontal: size(14)),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(size(8)),
+                                  child: CachedNetworkImage(
+                                      imageUrl: item.imagePath,
+                                      fit: BoxFit.cover),
+                                )),
+                          );
                         },
                       );
                     })
@@ -229,7 +212,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
           ),
         ),
         Padding(
-          padding: EdgeInsets.only(top: 8),
+          padding: EdgeInsets.only(top: size(8)),
           child: MultiValueListenableBuilder(
             valueListenableList: [bloc.bannerData, bloc.currentBanner],
             builder: (context, values, child) {
@@ -237,16 +220,17 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 child: PageIndicator(
                   itemCount: values[0].length,
                   currentItem: values[1],
-                  margin: 8,
+                  margin: size(8),
                   itemBuilder: (context, index, select) {
                     return Container(
-                      width: 16,
-                      height: 4,
+                      width: size(16),
+                      height: size(4),
                       decoration: BoxDecoration(
                           color: select
-                              ? Theme.of(context).primaryColor
-                              : Color(0xffeeeeee),
-                          borderRadius: BorderRadius.circular(2)),
+                              ? MyApp.getTheme(context).pageIndicatorActiveColor
+                              : MyApp.getTheme(context)
+                                  .pageIndicatorNormalColor,
+                          borderRadius: BorderRadius.circular(size(2))),
                     );
                   },
                 ),

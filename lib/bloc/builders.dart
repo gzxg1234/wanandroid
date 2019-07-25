@@ -12,8 +12,8 @@ class MultiValueListenableBuilder extends StatelessWidget {
   const MultiValueListenableBuilder({
     Key key,
     @required this.builder,
+    @required this.valueListenableList,
     this.child,
-    this.valueListenableList,
   })  : assert(valueListenableList != null && valueListenableList.length > 0),
         assert(builder != null);
 

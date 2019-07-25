@@ -6,6 +6,7 @@ import 'package:wanandroid/base/base_page.dart';
 import 'package:wanandroid/bloc/bloc_provider.dart';
 import 'package:wanandroid/module/catetory/cat_page.dart';
 import 'package:wanandroid/module/home/home_page.dart';
+import 'package:wanandroid/util/auto_size.dart';
 
 import '../../r.dart';
 import 'main_bloc.dart';
@@ -46,7 +47,6 @@ class _State extends State<MainPage> {
           bottomNavigationBar: ValueListenableBuilder<int>(
               valueListenable: bloc.currentTab,
               builder: (context, value, _) {
-                Color primaryColor = Theme.of(context).primaryColor;
                 Color selectedColor = BlocProvider.of<AppBloc>(context)
                     .theme
                     .bottomNavigatorSelectedColor;
@@ -67,7 +67,7 @@ class _State extends State<MainPage> {
                     selectedIconTheme: IconThemeData(color: selectedColor),
                     unselectedIconTheme: IconThemeData(color: unSelectedColor),
                     selectedItemColor: selectedColor,
-                    iconSize:24,
+                    iconSize:size(24),
                     items: [
                       BottomNavigationBarItem(
                         title: Text("首页"),
@@ -86,10 +86,8 @@ class _State extends State<MainPage> {
                       ),
                       BottomNavigationBarItem(
                         title: Text("公众号"),
-                        activeIcon: ImageIcon(AssetImage(R.assetsImgTabGzh),
-                            color: primaryColor),
-                        icon: ImageIcon(AssetImage(R.assetsImgTabGzh),
-                            color: Colors.grey),
+                        activeIcon: ImageIcon(AssetImage(R.assetsImgTabGzh)),
+                        icon: ImageIcon(AssetImage(R.assetsImgTabGzh)),
                       ),
                     ]);
               }),

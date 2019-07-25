@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  Color get itemTitleColor => Color(0xff333333);
+  Color get iconColor => Colors.white;
 
   Color get primaryColor => Color(0xff2196f3);
 
@@ -13,7 +13,7 @@ class AppTheme {
 
   Color get bottomNavigatorUnSelectedColor => Colors.black54;
 
-  Color get bottomNavigatorSelectedColor => Colors.blue;
+  Color get bottomNavigatorSelectedColor => primaryColor;
 
   Color get textColorPrimaryInverse => Colors.white;
 
@@ -22,11 +22,17 @@ class AppTheme {
   Color get textColorSecondary => Color(0xff757575);
 
   Color get cardColor => Colors.white;
+
+  Color get pageIndicatorActiveColor => primaryColor;
+
+  Color get pageIndicatorNormalColor => Colors.grey[400];
+
+  Color get flagTextColor => Colors.red;
 }
 
 class DarkTheme extends AppTheme {
   @override
-  Color get itemTitleColor => Colors.white;
+  Color get iconColor => Colors.white70;
 
   @override
   Color get primaryColor => Colors.grey[900];
@@ -34,19 +40,29 @@ class DarkTheme extends AppTheme {
   Color get backgroundColor => Colors.black;
 
   @override
-  Color get bottomNavigatorSelectedColor => Colors.white;
-
-  @override
   Color get bottomNavigatorBgColor => primaryColor;
 
   @override
-  Color get bottomNavigatorUnSelectedColor => Colors.white60;
+  Color get bottomNavigatorSelectedColor => Colors.white54;
 
   @override
-  Color get textColorPrimary => Colors.white;
+  Color get bottomNavigatorUnSelectedColor => Colors.white30;
 
   @override
-  Color get textColorSecondary => Colors.white;
+  Color get textColorPrimary => Colors.white54;
 
+  @override
+  Color get textColorSecondary => Colors.white30;
+
+  @override
+  Color get textColorPrimaryInverse => Colors.white54;
+
+  @override
   Color get cardColor => primaryColor;
+
+  @override
+  Color get pageIndicatorActiveColor => Colors.white70;
+
+  @override
+  Color get pageIndicatorNormalColor => Colors.white30;
 }

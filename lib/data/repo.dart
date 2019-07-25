@@ -1,10 +1,7 @@
 import 'package:dio/dio.dart';
 
-import '../data/bean/banner_entity.dart';
 import '../entity_factory.dart';
-import 'bean/page_data.dart';
-import 'bean/resp_entity.dart';
-import 'bean/article_entity.dart';
+import 'bean/bean.dart';
 
 class ApiException implements Exception {
   final String msg;
@@ -31,13 +28,21 @@ class Repo {
     }
     return ___dio;
   }
+
   static Future<List> getHomeData(int page) async {
     List data = List(2);
-    if(page ==0){
+    List<ArticleEntity> topArticles;
+    data[1] = await getArticleList(page);
+    if (page == 0) {
       data[0] = await getBanner();
+      topArticles = await getTopArticleList();
+      data[1].datas?.insertAll(0, topArticles);
     }
-    data[1]= await getArticleList(page);
     return data;
+  }
+
+  static Future<List<ArticleEntity>> getTopArticleList() async {
+    return getAndExactListData<ArticleEntity>("/article/top/json");
   }
 
   static Future<PageData<ArticleEntity>> getArticleList(int page) async {
@@ -53,6 +58,10 @@ class Repo {
     dynamic dataJson =
         await getAndExactData(url, queryParameters: queryParameters);
     return PageData<T>.fromJson(dataJson);
+  }
+
+  static Future<List<HotWordEntity>> getHotWord() async {
+    return getAndExactListData<HotWordEntity>("/hotkey/json");
   }
 
   static Future<List<T>> getAndExactListData<T>(String url,

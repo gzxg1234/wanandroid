@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:wanandroid/config/config.dart';
 
 class Utils {
@@ -63,6 +65,25 @@ class Utils {
     }
     return msg;
   }
+}
+
+void showToast({
+  @required String msg,
+  Toast toastLength,
+  int timeInSecForIos = 1,
+  double fontSize = 16.0,
+  ToastGravity gravity,
+  Color backgroundColor,
+  Color textColor,
+}) {
+  Fluttertoast.showToast(
+      msg: msg,
+      toastLength: toastLength,
+      timeInSecForIos: timeInSecForIos,
+      fontSize: fontSize,
+      gravity: gravity,
+      backgroundColor: backgroundColor,
+      textColor: textColor);
 }
 
 void dLog(String tag, String msg) {

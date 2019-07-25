@@ -56,7 +56,6 @@ class HomeBloc extends BaseBloc {
 
     _page = page;
     if (page == 0) {
-      await Future.delayed(Duration(seconds: 2));
       _currentBanner.value = 0;
       _bannerData.value = homeData[0] ?? [];
     }
