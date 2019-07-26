@@ -15,6 +15,10 @@ class AppTheme {
 
   Color get bottomNavigatorSelectedColor => primaryColor;
 
+  Color get tabBarSelectedColor => Colors.white;
+
+  Color get tabBarUnSelectedColor => Colors.white70;
+
   Color get textColorPrimaryInverse => Colors.white;
 
   Color get textColorPrimary => Color(0xff212121);
@@ -28,6 +32,9 @@ class AppTheme {
   Color get pageIndicatorNormalColor => Colors.grey[400];
 
   Color get flagTextColor => Colors.red;
+
+  Color get unCheckedWidgetBgColor => Colors.grey[200];
+  Color get checkedWidgetBgColor => primaryColor;
 }
 
 class DarkTheme extends AppTheme {

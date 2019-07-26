@@ -48,23 +48,18 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
         blocBuilder: (context) => WebBloc(),
         child: BlocConsumer<WebBloc>(builder: (context, bloc) {
           return Material(
-            child: Column(
-              children: <Widget>[
-                buildAppBar(context, bloc),
-                Expanded(
-                  child: Stack(children: <Widget>[
-                    buildWebView(context, bloc),
-                    Offstage(
-                        offstage: !_loading,
-                        child: Container(
-                          color: Colors.green,
-                          height: size(2),
-                          width: size(100),
-                        ))
-                  ]),
-                )
-              ],
-            ),
+            child: Scaffold(
+                appBar: buildAppBar(context, bloc),
+                body: Stack(children: <Widget>[
+                  buildWebView(context, bloc),
+                  Offstage(
+                      offstage: !_loading,
+                      child: Container(
+                        color: Colors.green,
+                        height: size(2),
+                        width: size(100),
+                      ))
+                ])),
           );
         }),
       ),
@@ -73,6 +68,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
 
   Widget buildAppBar(BuildContext context, WebBloc bloc) {
     return AppBar(
+      elevation: 4.0,
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         color: MyApp.getTheme(context).iconColor,

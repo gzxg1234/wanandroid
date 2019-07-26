@@ -41,6 +41,10 @@ class Repo {
     return data;
   }
 
+  static Future<List<ArticleCatEntity>> getArticleCategoryList(){
+    return getAndExactListData<ArticleCatEntity>("/tree/json");
+  }
+
   static Future<List<ArticleEntity>> getTopArticleList() async {
     return getAndExactListData<ArticleEntity>("/article/top/json");
   }
