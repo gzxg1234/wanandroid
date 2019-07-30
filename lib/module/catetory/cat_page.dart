@@ -11,6 +11,7 @@ import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/widget/common_button.dart';
 import 'package:wanandroid/widget/popup_window.dart';
 
+import 'article_list.dart';
 import 'cat_bloc.dart';
 
 class CatPage extends StatefulWidget {
@@ -27,8 +28,10 @@ class _State extends State<CatPage>
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
+  bool _tabChangeFromPage = false;
   TabController _tabController;
   TabController _subTabController;
+  PageController _pageController;
   GlobalKey _tabBarKey = GlobalKey();
 
   @override
@@ -52,10 +55,13 @@ class _State extends State<CatPage>
             builder: (context, state, _) {
               return MultiStateWidget(
                 state: state,
+                onPressedRetry: () {
+                  bloc.fetchCategoryData();
+                },
                 successBuilder: (context) {
                   return Column(
                     children: <Widget>[
-                      ValueListenableBuilder<List<ArticleCatEntity>>(
+                      ValueListenableBuilder<List<CategoryEntity>>(
                         valueListenable: bloc.catList,
                         builder: (context, list, _) {
                           _tabController?.dispose();
@@ -115,39 +121,69 @@ class _State extends State<CatPage>
                           );
                         },
                       ),
-                      Stack(
-                        children: <Widget>[
-                          Container(
-                            color: MyApp.getTheme(context).primaryColor,
-                            width: double.infinity,
-                            child:
-                                ValueListenableBuilder<List<ArticleCatEntity>>(
-                              valueListenable: bloc.subCatList,
-                              builder: (context, list, _) {
-                                _subTabController = TabController(
-                                    length: list.length, vsync: this);
-                                return TabBar(
-                                  isScrollable: true,
-                                  //是否可以滚动
-                                  controller: _subTabController,
-                                  labelColor: MyApp.getTheme(context)
-                                      .tabBarSelectedColor,
-                                  unselectedLabelColor: MyApp.getTheme(context)
-                                      .tabBarUnSelectedColor,
-                                  labelStyle: TextStyle(fontSize: size(14)),
-                                  tabs: () {
-                                    return list
-                                        .map((e) => Tab(
-                                              text: e.name,
-                                            ))
-                                        .toList();
-                                  }(),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      )
+                      Expanded(
+                        child: ValueListenableBuilder<List<CategoryEntity>>(
+                          valueListenable: bloc.subCatList,
+                          builder: (context, list, _) {
+                            _subTabController = TabController(
+                                length: list.length,
+                                vsync: this,
+                                initialIndex: 0);
+                            _subTabController.addListener(() {
+                              if (!_tabChangeFromPage) {
+                                _pageController
+                                    .jumpToPage(_subTabController.index);
+                              } else {
+                                _tabChangeFromPage = false;
+                              }
+                            });
+
+                            _pageController =
+                                PageController(initialPage: 0, keepPage: false);
+                            return Column(
+                              children: <Widget>[
+                                Container(
+                                    color: MyApp.getTheme(context).primaryColor,
+                                    width: double.infinity,
+                                    child: TabBar(
+                                        isScrollable: true,
+                                        //是否可以滚动
+                                        controller: _subTabController,
+                                        labelColor: MyApp.getTheme(context)
+                                            .tabBarSelectedColor,
+                                        unselectedLabelColor:
+                                            MyApp.getTheme(context)
+                                                .tabBarUnSelectedColor,
+                                        unselectedLabelStyle:
+                                            TextStyle(fontSize: size(14)),
+                                        labelStyle:
+                                            TextStyle(fontSize: size(14)),
+                                        tabs: () {
+                                          return list
+                                              .map((e) => Tab(
+                                                    text: e.name,
+                                                  ))
+                                              .toList();
+                                        }())),
+                                Expanded(
+                                  child: PageView.builder(
+                                      key: ObjectKey(list),
+                                      itemCount: bloc.subCatList.value.length,
+                                      controller: _pageController,
+                                      onPageChanged: (index) {
+                                        _tabChangeFromPage = true;
+                                        _subTabController?.index = index;
+                                      },
+                                      itemBuilder: (context, index) {
+                                        return ArticleList(
+                                            cat: bloc.subCatList.value[index]);
+                                      }),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -183,26 +219,30 @@ class _State extends State<CatPage>
             child: Container(
               constraints: BoxConstraints.expand(),
               decoration: BoxDecoration(color: Colors.black54),
-              child: Stack(
-                children: <Widget>[
-                  ClipRect(
-                    child: SlideTransition(
-                      position: animate,
-                      child: Container(
-                        padding: EdgeInsets.all(size(16)),
-                        constraints:
-                            BoxConstraints.tightFor(width: double.infinity),
-                        color: Colors.white,
-                        child: SingleChildScrollView(
-                          child: Wrap(
-                              runSpacing: size(8),
-                              spacing: size(8),
-                              children: buildCatFlowChildren(bloc)),
+              child: GestureDetector(
+                //加一层点击，不然白色包裹部分也会响应关闭弹窗
+                onTap: () {},
+                child: Stack(
+                  children: <Widget>[
+                    ClipRect(
+                      child: SlideTransition(
+                        position: animate,
+                        child: Container(
+                          padding: EdgeInsets.all(size(16)),
+                          constraints:
+                              BoxConstraints.tightFor(width: double.infinity),
+                          color: Colors.white,
+                          child: SingleChildScrollView(
+                            child: Wrap(
+                                runSpacing: size(8),
+                                spacing: size(8),
+                                children: buildCatFlowChildren(bloc)),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -221,7 +261,7 @@ class _State extends State<CatPage>
   List<Widget> buildCatFlowChildren(CatBloc bloc) {
     List<Widget> children = [];
     for (int i = 0; i < bloc.catList.value.length; i++) {
-      ArticleCatEntity item = bloc.catList.value[i];
+      CategoryEntity item = bloc.catList.value[i];
       bool checked = i == _tabController.index;
       var normalTextStyle = TextStyle(
           color: MyApp.getTheme(context).textColorPrimary, fontSize: size(12));
@@ -250,7 +290,6 @@ class _State extends State<CatPage>
         shapeBorder: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(size(15))),
       ));
-
     }
     return children;
   }

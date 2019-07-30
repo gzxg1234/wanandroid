@@ -6,6 +6,7 @@ import 'package:wanandroid/base/base_page.dart';
 import 'package:wanandroid/bloc/bloc_provider.dart';
 import 'package:wanandroid/module/catetory/cat_page.dart';
 import 'package:wanandroid/module/home/home_page.dart';
+import 'package:wanandroid/module/projectcat/project_page.dart';
 import 'package:wanandroid/util/auto_size.dart';
 
 import '../../r.dart';
@@ -39,9 +40,12 @@ class _State extends State<MainPage> {
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
                 return HomePage();
-              } else {
+              } else if(index==1){
                 return CatPage();
+              }else if(index==2){
+                return ProjectPage();
               }
+              return Container();
             },
           ),
           bottomNavigationBar: ValueListenableBuilder<int>(
@@ -55,6 +59,8 @@ class _State extends State<MainPage> {
                     .bottomNavigatorUnSelectedColor;
                 return BottomNavigationBar(
                     onTap: (index) {
+                      if(index==bloc.currentTab.value){
+                      }
                       bloc.setCurrentTab(index);
                       pageController.jumpToPage(index);
                     },

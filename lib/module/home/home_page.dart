@@ -156,7 +156,9 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                   return buildBanner(bloc);
                 }
                 var item = list[index - 1];
-                return ArticleItem(item);
+                return Container(
+                    margin: EdgeInsets.symmetric(horizontal: size(12)),
+                    child: ArticleItem(item));
               },
               loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
             );
@@ -174,14 +176,14 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
             child: Stack(
               children: <Widget>[
                 MultiValueListenableBuilder(
-                    valueListenableList: [bloc.bannerData, bloc.currentBanner],
+                    valueListenableList: [bloc.bannerData, bloc.bannerIndex],
                     builder: (context, values, child) {
                       PageControllerExt controller = PageControllerExt(
-                          cycle: true, itemCount: values[0].length);
-                      Future.microtask(() {
-                        controller.jumpToPage(values[1]);
-                      });
+                          initialPage: values[1],
+                          cycle: true,
+                          itemCount: values[0].length);
                       return ViewPager(
+                        key: ObjectKey(values),
                         cycle: true,
                         autoTurningTime: 5000,
                         onPageChanged: bloc.bannerChanged,
@@ -214,7 +216,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
         Padding(
           padding: EdgeInsets.only(top: size(8)),
           child: MultiValueListenableBuilder(
-            valueListenableList: [bloc.bannerData, bloc.currentBanner],
+            valueListenableList: [bloc.bannerData, bloc.bannerIndex],
             builder: (context, values, child) {
               return Center(
                 child: PageIndicator(

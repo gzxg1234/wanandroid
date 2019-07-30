@@ -29,7 +29,7 @@ class AppTheme {
 
   Color get pageIndicatorActiveColor => primaryColor;
 
-  Color get pageIndicatorNormalColor => Colors.grey[400];
+  Color get pageIndicatorNormalColor => Colors.grey[200];
 
   Color get flagTextColor => Colors.red;
 

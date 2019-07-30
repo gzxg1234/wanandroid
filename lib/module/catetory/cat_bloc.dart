@@ -3,19 +3,18 @@ import 'package:flutter/foundation.dart';
 import 'package:wanandroid/base/base_bloc.dart';
 import 'package:wanandroid/base_widget/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_cat_entity.dart';
-import 'package:wanandroid/data/repo.dart';
 
 class CatBloc extends BaseBloc {
   ValueNotifier<StateValue> _state = ValueNotifier(StateValue.Loading);
-  ValueNotifier<List<ArticleCatEntity>> _catList = ValueNotifier([]);
-  ValueNotifier<List<ArticleCatEntity>> _subCatList = ValueNotifier([]);
+  ValueNotifier<List<CategoryEntity>> _catList = ValueNotifier([]);
+  ValueNotifier<List<CategoryEntity>> _subCatList = ValueNotifier([]);
   ValueNotifier<int> _currentSubCat = ValueNotifier(0);
 
   ValueListenable<StateValue> get state => _state;
 
-  ValueListenable<List<ArticleCatEntity>> get catList => _catList;
+  ValueListenable<List<CategoryEntity>> get catList => _catList;
 
-  ValueListenable<List<ArticleCatEntity>> get subCatList => _subCatList;
+  ValueListenable<List<CategoryEntity>> get subCatList => _subCatList;
 
   ValueListenable<int> get currentSubCat => _currentSubCat;
 
@@ -23,17 +22,18 @@ class CatBloc extends BaseBloc {
   void onInit() {
     // TODO: implement onInit
     super.onInit();
-    loadData();
+    fetchCategoryData();
   }
 
-  void loadData() async {
+  void fetchCategoryData() async {
     _state.value = StateValue.Loading;
     try {
-      _catList.value = await Repo.getArticleCategoryList();
+      _catList.value = await repo.getArticleCategoryList();
       setParentCatPosition(0);
       _state.value = StateValue.Success;
     } catch (e) {
       _state.value = StateValue.Error;
+      log(e);
     }
   }
 

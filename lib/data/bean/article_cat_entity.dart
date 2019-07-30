@@ -1,6 +1,6 @@
-class ArticleCatEntity {
+class CategoryEntity {
   int visible;
-  List<ArticleCatEntity> children;
+  List<CategoryEntity> children;
   String name;
   bool userControlSetTop;
   int id;
@@ -8,7 +8,7 @@ class ArticleCatEntity {
   int parentChapterId;
   int order;
 
-  ArticleCatEntity(
+  CategoryEntity(
       {this.visible,
       this.children,
       this.name,
@@ -18,12 +18,12 @@ class ArticleCatEntity {
       this.parentChapterId,
       this.order});
 
-  ArticleCatEntity.fromJson(Map<String, dynamic> json) {
+  CategoryEntity.fromJson(Map<String, dynamic> json) {
     visible = json['visible'];
     if (json['children'] != null) {
-      children = new List<ArticleCatEntity>();
+      children = new List<CategoryEntity>();
       (json['children'] as List).forEach((v) {
-        children.add(new ArticleCatEntity.fromJson(v));
+        children.add(new CategoryEntity.fromJson(v));
       });
     }
     name = json['name'];

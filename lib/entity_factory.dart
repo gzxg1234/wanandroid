@@ -8,8 +8,8 @@ class EntityFactory {
   static T generateOBJ<T>(json) {
     if (1 == 0) {
       return null;
-    } else if (T.toString() == "ArticleCatEntity") {
-      return ArticleCatEntity.fromJson(json) as T;
+    } else if (T.toString() == "CategoryEntity") {
+      return CategoryEntity.fromJson(json) as T;
     } else if (T.toString() == "ArticleEntity") {
       return ArticleEntity.fromJson(json) as T;
     } else if (T.toString() == "BannerEntity") {
@@ -18,6 +18,8 @@ class EntityFactory {
       return HotWordEntity.fromJson(json) as T;
     } else if (T.toString() == "RespEntity") {
       return RespEntity.fromJson(json) as T;
+    } else if (T.toString() == "Tag") {
+      return Tag.fromJson(json) as T;
     } else {
       return null;
     }

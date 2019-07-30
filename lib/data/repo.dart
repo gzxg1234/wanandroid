@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:wanandroid/config/config.dart';
 
 import '../entity_factory.dart';
 import 'bean/bean.dart';
@@ -12,71 +13,116 @@ class ApiException implements Exception {
 class Repo {
   static Dio ___dio;
 
-  static Dio get dio {
+  static const LOG_ENABLE = false;
+
+  static Dio get _dio {
     if (___dio == null) {
       ___dio = Dio(BaseOptions(
           baseUrl: "https://www.wanandroid.com",
           method: "get",
           connectTimeout: 15000,
           receiveTimeout: 3000));
-      ___dio.interceptors.add(LogInterceptor(
-          request: true,
-          responseBody: true,
-          error: true,
-          requestBody: true,
-          responseHeader: true));
+      if (LOG_ENABLE) {
+        ___dio.interceptors.add(LogInterceptor(
+            request: true,
+            responseBody: true,
+            error: true,
+            requestBody: true,
+            responseHeader: true));
+      }
     }
     return ___dio;
   }
 
-  static Future<List> getHomeData(int page) async {
+  CancelToken _cancelToken;
+
+  Repo([this._cancelToken]);
+
+  ///
+  /// 首页数据
+  ///
+  Future<List> getHomeData(int page, [CancelToken cancelToken]) async {
     List data = List(2);
     List<ArticleEntity> topArticles;
     data[1] = await getArticleList(page);
     if (page == 0) {
-      data[0] = await getBanner();
-      topArticles = await getTopArticleList();
+      data[0] = await _getBanner();
+      topArticles = await _getTopArticleList();
       data[1].datas?.insertAll(0, topArticles);
     }
     return data;
   }
 
-  static Future<List<ArticleCatEntity>> getArticleCategoryList(){
-    return getAndExactListData<ArticleCatEntity>("/tree/json");
+  ///
+  /// 项目分类数据
+  ///
+  Future<List<CategoryEntity>> getProjectCategoryList() {
+    return _getAndExactListData<CategoryEntity>("/project/tree/json");
   }
 
-  static Future<List<ArticleEntity>> getTopArticleList() async {
-    return getAndExactListData<ArticleEntity>("/article/top/json");
+  ///
+  /// 最新项目
+  ///
+  Future<PageData<ArticleEntity>> getNewsProjectList(int page) async {
+    return _getAndExactPageData<ArticleEntity>(
+        "/article/listproject/$page/json");
   }
 
-  static Future<PageData<ArticleEntity>> getArticleList(int page) async {
-    return getAndExactPageData<ArticleEntity>("/article/list/$page/json");
+  ///
+  /// 项目列表
+  ///
+  Future<PageData<ArticleEntity>> getProjectList(int page, [int cid]) async {
+    return _getAndExactPageData<ArticleEntity>("/project/list/$page/json",
+        queryParameters: cid == null ? {} : {"cid": cid});
   }
 
-  static Future<List<BannerEntity>> getBanner() async {
-    return getAndExactListData<BannerEntity>("/banner/json");
+  ///
+  /// 文章体系分类数据
+  ///
+  Future<List<CategoryEntity>> getArticleCategoryList() {
+    return _getAndExactListData<CategoryEntity>("/tree/json");
   }
 
-  static Future<PageData<T>> getAndExactPageData<T>(String url,
+  ///
+  /// 置顶文章
+  ///
+  Future<List<ArticleEntity>> _getTopArticleList() async {
+    return _getAndExactListData<ArticleEntity>("/article/top/json");
+  }
+
+  ///
+  /// 文章列表
+  ///
+  Future<PageData<ArticleEntity>> getArticleList(int page, [int cid]) async {
+    return _getAndExactPageData<ArticleEntity>("/article/list/$page/json",
+        queryParameters: cid == null ? {} : {"cid": cid});
+  }
+
+  Future<List<BannerEntity>> _getBanner() async {
+    return _getAndExactListData<BannerEntity>("/banner/json");
+  }
+
+  Future<List<HotWordEntity>> getHotWord([CancelToken cancelToken]) async {
+    return _getAndExactListData<HotWordEntity>("/hotkey/json");
+  }
+
+  Future<List<T>> _getAndExactListData<T>(String url,
       {Map<String, dynamic> queryParameters}) async {
-    dynamic dataJson =
-        await getAndExactData(url, queryParameters: queryParameters);
-    return PageData<T>.fromJson(dataJson);
-  }
-
-  static Future<List<HotWordEntity>> getHotWord() async {
-    return getAndExactListData<HotWordEntity>("/hotkey/json");
-  }
-
-  static Future<List<T>> getAndExactListData<T>(String url,
-      {Map<String, dynamic> queryParameters}) async {
-    List list = await getAndExactData(url, queryParameters: queryParameters);
+    List list = await _getAndExactData(url, queryParameters: queryParameters);
     return list.map((e) => EntityFactory.generateOBJ<T>(e)).toList();
   }
 
-  static Future<dynamic> getAndExactData(String url,
+  Future<PageData<T>> _getAndExactPageData<T>(String url,
       {Map<String, dynamic> queryParameters}) async {
-    Response response = await dio.get(url, queryParameters: queryParameters);
+    dynamic dataJson =
+        await _getAndExactData(url, queryParameters: queryParameters);
+    return PageData<T>.fromJson(dataJson);
+  }
+
+  Future<dynamic> _getAndExactData(String url,
+      {Map<String, dynamic> queryParameters}) async {
+    Response response = await _dio.get(url,
+        cancelToken: _cancelToken, queryParameters: queryParameters);
     RespEntity repoEntity = RespEntity.fromJson(response.data);
     if (repoEntity.errorCode == 0) {
       return repoEntity.data;

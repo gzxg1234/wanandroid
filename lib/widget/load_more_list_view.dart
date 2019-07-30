@@ -10,6 +10,8 @@ class LoadMoreListView extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final LoadMoreCallback loadMoreCallback;
   final IndexedWidgetBuilder separatorBuilder;
+  final bool hasMore;
+  final ScrollPhysics physics;
 
   const LoadMoreListView(
       {Key key,
@@ -17,8 +19,10 @@ class LoadMoreListView extends StatefulWidget {
       @required this.loadMoreViewBuilder,
       @required this.itemBuilder,
       this.loadMoreCallback,
+      this.hasMore = true,
       this.padding,
-      this.separatorBuilder})
+      this.separatorBuilder,
+      this.physics})
       : super(key: key);
 
   @override
@@ -29,14 +33,30 @@ class LoadMoreListView extends StatefulWidget {
 }
 
 enum LoadMoreState {
-  Completed,
+  Normal,
   Error,
   End,
 }
 
 class _LoadMoreListViewState extends State<LoadMoreListView> {
-  LoadMoreState state = LoadMoreState.Completed;
+  LoadMoreState state;
+
   bool loading = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    state = widget.hasMore ? LoadMoreState.Normal : LoadMoreState.End;
+  }
+
+  @override
+  void didUpdateWidget(LoadMoreListView oldWidget) {
+    if (oldWidget.hasMore != widget.hasMore) {
+      state = widget.hasMore ? LoadMoreState.Normal : LoadMoreState.End;
+    }
+    super.didUpdateWidget(oldWidget);
+  }
 
   void _loadMore() {
     if (widget.loadMoreCallback != null) {
@@ -62,6 +82,7 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
     bool enableLoadMore = widget.loadMoreCallback != null;
     return ListView.separated(
       controller: ScrollController(),
+      physics: widget.physics,
       separatorBuilder:
           widget.separatorBuilder ?? (context, index) => Offstage(),
       padding: widget.padding,
@@ -74,7 +95,7 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
                   behavior: HitTestBehavior.translucent,
                   onTap: () {
                     setState(() {
-                      state = LoadMoreState.Completed;
+                      state = LoadMoreState.Normal;
                       _loadMore();
                     });
                   },
@@ -82,7 +103,7 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
             }
             return widget.loadMoreViewBuilder(context, state);
           }
-          if (state == LoadMoreState.Completed &&
+          if (state == LoadMoreState.Normal &&
               !loading &&
               index == widget.itemCount - 1) {
             _loadMore();

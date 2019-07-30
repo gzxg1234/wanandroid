@@ -11,7 +11,7 @@ class HotWordBloc extends BaseBloc {
 
   void refresh() async {
     try {
-      var list = await Repo.getHotWord();
+      var list = await repo.getHotWord();
       _hotWordList.value = list;
     } catch (e) {
       log("refresh hot word error:\n${e.toString()}");
