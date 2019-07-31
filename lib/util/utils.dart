@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:wanandroid/config/config.dart';
+import 'package:wanandroid/data/repo.dart';
 
 class Utils {
   ///延时执行
@@ -29,10 +31,34 @@ class Utils {
     });
   }
 
+  static void toastError(dynamic e, [String defMsg = ""]) {
+    showToast(msg: getErrorMsg(e, defMsg));
+  }
+
+  static void showToast({
+    @required String msg,
+    Toast toastLength,
+    int timeInSecForIos = 1,
+    double fontSize = 16.0,
+    ToastGravity gravity,
+    Color backgroundColor,
+    Color textColor,
+  }) {
+    Fluttertoast.showToast(
+        msg: msg,
+        toastLength: toastLength,
+        timeInSecForIos: timeInSecForIos,
+        fontSize: fontSize,
+        gravity: gravity,
+        backgroundColor: backgroundColor,
+        textColor: textColor);
+  }
+
   static String getErrorMsg(dynamic e, [String defaultMsg]) {
     assert(e != null);
+    print(e);
     String msg;
-    if (e) {
+    if (e is ApiException) {
       msg = e.msg;
     } else if (e is DioError) {
       switch (e.type) {
@@ -51,7 +77,9 @@ class Utils {
           }
           break;
         case DioErrorType.DEFAULT:
-          msg = "未知错误:\n${e.error.toString()}";
+          if (e.error is IOException) {
+            msg = "网络错误";
+          }
           break;
         case DioErrorType.CANCEL:
           return null;
@@ -65,25 +93,6 @@ class Utils {
     }
     return msg;
   }
-}
-
-void showToast({
-  @required String msg,
-  Toast toastLength,
-  int timeInSecForIos = 1,
-  double fontSize = 16.0,
-  ToastGravity gravity,
-  Color backgroundColor,
-  Color textColor,
-}) {
-  Fluttertoast.showToast(
-      msg: msg,
-      toastLength: toastLength,
-      timeInSecForIos: timeInSecForIos,
-      fontSize: fontSize,
-      gravity: gravity,
-      backgroundColor: backgroundColor,
-      textColor: textColor);
 }
 
 void dLog(String tag, String msg) {

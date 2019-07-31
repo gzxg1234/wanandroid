@@ -7,6 +7,7 @@ import 'package:wanandroid/base_widget/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/data/bean/banner_entity.dart';
 import 'package:wanandroid/data/bean/page_data.dart';
+import 'package:wanandroid/util/utils.dart';
 import 'package:wanandroid/widget/load_more_list_view.dart';
 
 class HomeBloc extends BaseBloc {
@@ -47,6 +48,7 @@ class HomeBloc extends BaseBloc {
     try {
       homeData = await repo.getHomeData(page);
     } catch (e) {
+      Utils.toastError(e,"加载失败");
       if (reload) {
         _state.value = StateValue.Error;
       }

@@ -10,7 +10,7 @@ class ApiException implements Exception {
   ApiException(this.msg);
 }
 
-class Repo {
+class ApiClient {
   static Dio ___dio;
 
   static const LOG_ENABLE = false;
@@ -36,7 +36,11 @@ class Repo {
 
   CancelToken _cancelToken;
 
-  Repo([this._cancelToken]);
+  ApiClient([this._cancelToken]);
+
+  void dispose(){
+    _cancelToken?.cancel("cancel");
+  }
 
   ///
   /// 首页数据

@@ -103,7 +103,6 @@ class _Error extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print("sadad");
         onPressedRetry?.call();
       },
       child: Container(

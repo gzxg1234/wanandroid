@@ -135,7 +135,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      showToast(msg: "没有可打开的浏览器");
+      Utils.showToast(msg: "没有可打开的浏览器");
     }
   }
 

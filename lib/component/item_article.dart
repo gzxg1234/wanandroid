@@ -11,8 +11,9 @@ import 'package:wanandroid/util/auto_size.dart';
 ///
 class ArticleItem extends StatelessWidget {
   final ArticleEntity item;
+  final bool showFlag;
 
-  ArticleItem(this.item);
+  ArticleItem(this.item, [this.showFlag = false]);
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +35,65 @@ class ArticleItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  item.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: size(15),
-                      color: appBloc.theme.textColorPrimary),
-                ),
+                Text.rich(
+                    TextSpan(children: [
+                      ...() {
+                        if (!showFlag) {
+                          return [];
+                        }
+                        return [
+                          WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Offstage(
+                                  offstage: !item.fresh,
+                                  child: Container(
+                                      margin: EdgeInsets.only(right: size(4)),
+                                      padding: EdgeInsets.all(size(1)),
+                                      decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color:
+                                                  appBloc.theme.flagTextColor),
+                                          borderRadius:
+                                              BorderRadius.circular(size(2))),
+                                      child: Text("新",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: appBloc
+                                                  .theme.flagTextColor))))),
+                          WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Offstage(
+                                  offstage: item.type == 0,
+                                  child: Container(
+                                      margin: EdgeInsets.only(right: size(4)),
+                                      padding: EdgeInsets.all(size(1)),
+                                      decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color:
+                                                  appBloc.theme.flagTextColor),
+                                          borderRadius:
+                                              BorderRadius.circular(size(2))),
+                                      child: Text("置顶",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: appBloc
+                                                  .theme.flagTextColor)))))
+                        ];
+                      }(),
+                      TextSpan(
+                        text: item.title,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: size(14),
+                            color: appBloc.theme.textColorPrimary),
+                      )
+                    ]),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2),
                 Container(
                   margin: EdgeInsets.only(top: size(8)),
                   child: Text(
@@ -64,40 +115,6 @@ class ArticleItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: <Widget>[
-                      Offstage(
-                        offstage: !item.fresh,
-                        child: Container(
-                          margin: EdgeInsets.only(right: size(4)),
-                          padding: EdgeInsets.all(size(1)),
-                          decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: appBloc.theme.flagTextColor),
-                              borderRadius: BorderRadius.circular(size(2))),
-                          child: Text("新",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: appBloc.theme.flagTextColor)),
-                        ),
-                      ),
-                      Offstage(
-                        offstage: item.type == 0,
-                        child: Container(
-                          margin: EdgeInsets.only(right: size(4)),
-                          padding: EdgeInsets.all(size(1)),
-                          decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: appBloc.theme.flagTextColor),
-                              borderRadius: BorderRadius.circular(size(2))),
-                          child: Text("置顶",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: appBloc.theme.flagTextColor)),
-                        ),
-                      ),
                       ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: size(150)),
                         child: Text("作者：${item.author}",

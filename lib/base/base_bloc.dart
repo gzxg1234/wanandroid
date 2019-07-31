@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:wanandroid/bloc/bloc.dart';
 import 'package:wanandroid/data/repo.dart';
 import 'package:wanandroid/util/simple_event.dart';
@@ -7,17 +8,17 @@ import 'package:wanandroid/util/utils.dart';
 
 class BaseBloc extends Bloc {
   @protected
-  Repo repo;
+  ApiClient repo;
   final CancelToken _cancelToken = CancelToken();
   final SimpleNotifier _showLoading = SimpleNotifier();
   final SimpleNotifier _hideLoading = SimpleNotifier();
 
-  SimpleNotifier get showLoadingStream => _showLoading;
+  ValueListenable get showLoadingStream => _showLoading;
 
-  SimpleNotifier get hideLoadingStream => _hideLoading;
+  ValueListenable get hideLoadingStream => _hideLoading;
 
   BaseBloc() {
-    repo = Repo(_cancelToken);
+    repo = ApiClient(_cancelToken);
   }
 
   @override
@@ -30,8 +31,8 @@ class BaseBloc extends Bloc {
   @mustCallSuper
   void onDispose() {
     dLog(this.runtimeType.toString(), "onDispose");
-    showLoadingStream.dispose();
-    hideLoadingStream.dispose();
+    _showLoading.dispose();
+    _hideLoading.dispose();
     _cancelToken.cancel("dispose");
     super.onDispose();
   }

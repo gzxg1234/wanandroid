@@ -50,7 +50,7 @@ class ProjectItem extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: size(15),
+                                  fontSize: size(14),
                                   color: appBloc.theme.textColorPrimary),
                             ),
                             Container(
@@ -58,7 +58,7 @@ class ProjectItem extends StatelessWidget {
                               child: Text(item.desc,
                                   maxLines: 4,
                                   style: TextStyle(
-                                      fontSize: size(12),
+                                      fontSize: size(13),
                                       color: appBloc.theme.textColorSecondary)),
                             )
                           ],

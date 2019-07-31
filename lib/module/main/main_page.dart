@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:wanandroid/app/app_bloc.dart';
-import 'package:wanandroid/base/base_page.dart';
+import 'package:wanandroid/base/base_bloc_provider.dart';
 import 'package:wanandroid/bloc/bloc_provider.dart';
 import 'package:wanandroid/module/catetory/cat_page.dart';
 import 'package:wanandroid/module/home/home_page.dart';
@@ -22,6 +22,12 @@ class MainPage extends StatefulWidget {
 
 class _State extends State<MainPage> {
   final PageController pageController = PageController(initialPage: 0);
+  List<GlobalKey<dynamic>> pageKeys = [
+    GlobalKey(debugLabel: "HomePage Key"),
+    GlobalKey(debugLabel: "HomePage Key"),
+    GlobalKey(debugLabel: "HomePage Key"),
+    GlobalKey(debugLabel: "HomePage Key")
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +45,11 @@ class _State extends State<MainPage> {
             physics: NeverScrollableScrollPhysics(),
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
-                return HomePage();
-              } else if(index==1){
-                return CatPage();
-              }else if(index==2){
-                return ProjectPage();
+                return HomePage(key: pageKeys[0]);
+              } else if (index == 1) {
+                return CatPage(key: pageKeys[1]);
+              } else if (index == 2) {
+                return ProjectPage(key: pageKeys[2]);
               }
               return Container();
             },
@@ -59,7 +65,8 @@ class _State extends State<MainPage> {
                     .bottomNavigatorUnSelectedColor;
                 return BottomNavigationBar(
                     onTap: (index) {
-                      if(index==bloc.currentTab.value){
+                      if (index == bloc.currentTab.value) {
+                        pageKeys[index].currentState.handleMainTabRepeatTap();
                       }
                       bloc.setCurrentTab(index);
                       pageController.jumpToPage(index);
@@ -73,7 +80,7 @@ class _State extends State<MainPage> {
                     selectedIconTheme: IconThemeData(color: selectedColor),
                     unselectedIconTheme: IconThemeData(color: unSelectedColor),
                     selectedItemColor: selectedColor,
-                    iconSize:size(24),
+                    iconSize: size(24),
                     items: [
                       BottomNavigationBarItem(
                         title: Text("首页"),

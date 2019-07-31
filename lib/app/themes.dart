@@ -23,7 +23,7 @@ class AppTheme {
 
   Color get textColorPrimary => Color(0xff212121);
 
-  Color get textColorSecondary => Color(0xff757575);
+  Color get textColorSecondary => Color(0xff666666);
 
   Color get cardColor => Colors.white;
 

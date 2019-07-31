@@ -12,12 +12,14 @@ class LoadMoreListView extends StatefulWidget {
   final IndexedWidgetBuilder separatorBuilder;
   final bool hasMore;
   final ScrollPhysics physics;
+  final ScrollController scrollController;
 
   const LoadMoreListView(
       {Key key,
       @required this.itemCount,
       @required this.loadMoreViewBuilder,
       @required this.itemBuilder,
+      this.scrollController,
       this.loadMoreCallback,
       this.hasMore = true,
       this.padding,
@@ -33,8 +35,13 @@ class LoadMoreListView extends StatefulWidget {
 }
 
 enum LoadMoreState {
+  ///正常状态
   Normal,
+
+  ///错误状态
   Error,
+
+  ///加载结束状态
   End,
 }
 
@@ -43,16 +50,36 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
 
   bool loading = false;
 
+  ScrollController _scrollController;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     state = widget.hasMore ? LoadMoreState.Normal : LoadMoreState.End;
+    _setupScrollListener();
+  }
+
+  void _setupScrollListener() {
+    _scrollController?.dispose();
+    _scrollController = widget.scrollController ?? ScrollController();
+    _scrollController.addListener(() {
+      if (!loading &&
+          _scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          state == LoadMoreState.Normal) {
+        _loadMore();
+      }
+    });
   }
 
   @override
   void didUpdateWidget(LoadMoreListView oldWidget) {
+    if (oldWidget.scrollController != widget.scrollController) {
+      _setupScrollListener();
+    }
     if (oldWidget.hasMore != widget.hasMore) {
+      loading = false;
       state = widget.hasMore ? LoadMoreState.Normal : LoadMoreState.End;
     }
     super.didUpdateWidget(oldWidget);
@@ -81,7 +108,7 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
     // TODO: implement build
     bool enableLoadMore = widget.loadMoreCallback != null;
     return ListView.separated(
-      controller: ScrollController(),
+      controller: _scrollController,
       physics: widget.physics,
       separatorBuilder:
           widget.separatorBuilder ?? (context, index) => Offstage(),
@@ -102,11 +129,6 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
                   child: widget.loadMoreViewBuilder(context, state));
             }
             return widget.loadMoreViewBuilder(context, state);
-          }
-          if (state == LoadMoreState.Normal &&
-              !loading &&
-              index == widget.itemCount - 1) {
-            _loadMore();
           }
         }
         return widget.itemBuilder(context, index);

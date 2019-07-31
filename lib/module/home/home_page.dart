@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:wanandroid/app/app.dart';
 import 'package:wanandroid/app/hot_word_bloc.dart';
-import 'package:wanandroid/base/base_page.dart';
+import 'package:wanandroid/base/base_bloc_provider.dart';
 import 'package:wanandroid/base_widget/base_load_more_view_builder.dart';
 import 'package:wanandroid/base_widget/multi_state_widget.dart';
 import 'package:wanandroid/bloc/bloc_provider.dart';
@@ -20,6 +20,8 @@ import '../../r.dart';
 import 'home_bloc.dart';
 
 class HomePage extends StatefulWidget {
+  HomePage({Key key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -32,6 +34,10 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
+  HomeBloc _bloc;
+
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -41,12 +47,18 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
     });
   }
 
+  void handleMainTabRepeatTap() {
+    if(_bloc.state.value == StateValue.Success) {
+      _refreshIndicatorKey.currentState.show();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return BaseBlocProvider(
       blocBuilder: (context) {
-        return HomeBloc();
+        return _bloc = HomeBloc();
       },
       child: BlocConsumer<HomeBloc>(
         builder: (context, bloc) {
@@ -137,6 +149,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
   Widget buildContent(BuildContext context, HomeBloc bloc) {
     return RefreshIndicator(
+      key: _refreshIndicatorKey,
       displacement: size(40),
       onRefresh: bloc.refresh,
       child: ValueListenableBuilder<List<ArticleEntity>>(
@@ -158,7 +171,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 var item = list[index - 1];
                 return Container(
                     margin: EdgeInsets.symmetric(horizontal: size(12)),
-                    child: ArticleItem(item));
+                    child: ArticleItem(item,true));
               },
               loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
             );

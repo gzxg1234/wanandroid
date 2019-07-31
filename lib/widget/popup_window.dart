@@ -3,52 +3,93 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-typedef void RouteCreatedCallback(Route<dynamic> route);
+typedef Widget PageBuilder<T>(BuildContext context, Animation<double> animation,
+    Animation<double> secondaryAnimation, PopupWindow<T> popupWindow);
 
-Future<T> showPopupAsDropdown<T>(
-    {@required BuildContext context,
-    RouteCreatedCallback routeCreatedCallback,
-    @required RoutePageBuilder pageBuilder,
-    Offset offset = Offset.zero,
-    Duration transitionDuration,
-    RouteTransitionsBuilder transitionBuilder,
-    String label}) {
-  final RenderBox target = context.findRenderObject();
-  final RenderBox overlay = Overlay.of(context).context.findRenderObject();
-  final Rect overlayRect = Offset.zero & overlay.size;
-  final Rect position = Rect.fromPoints(
-    target.localToGlobal(target.size.topLeft(offset), ancestor: overlay),
-    target.localToGlobal(target.size.bottomRight(offset), ancestor: overlay),
-  );
+///
+/// 弹窗类，实现依附于widget显示弹窗
+///
+class PopupWindow<T> {
+  _PopupWindowRoute<T> _route;
 
-  var route = _PopupWindowRoute<T>(
-    position: position,
-    overlayRect: overlayRect,
-    pageBuilder: pageBuilder,
-    semanticLabel: label,
-    transitionBuilder: transitionBuilder,
-    transitionDuration: transitionDuration,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-  );
-  routeCreatedCallback?.call(route);
-  return Navigator.of(context, rootNavigator: true).push(route);
+  final PageBuilder pageBuilder;
+  final RouteTransitionsBuilder transitionsBuilder;
+  final Duration transitionDuration;
+  final bool barrierDismissible;
+
+  PopupWindow(
+      {this.pageBuilder,
+      this.transitionsBuilder,
+      this.transitionDuration,
+      this.barrierDismissible = true});
+
+  get isShown => _route != null;
+
+  ///显示于[targetContext]元素下方
+  ///[offset] 偏移量
+  Future<T> showAsDropdown(
+      {BuildContext targetContext, Offset offset = Offset.zero}) {
+    if (_route != null) {
+      if (_route.targetContext != targetContext) {
+        dismiss(null);
+      }
+    }
+    final _PopupWindowRoute<T> route = _route = _PopupWindowRoute<T>(
+        targetContext: targetContext,
+        offset: offset,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return pageBuilder(context, animation, secondaryAnimation, this);
+        },
+        barrierLabel:
+            MaterialLocalizations.of(targetContext).modalBarrierDismissLabel,
+        transitionBuilder: transitionsBuilder,
+        transitionDuration: transitionDuration);
+    return Navigator.of(targetContext).push(route).then((result) {
+      if (route == _route) {
+        _route = null;
+      }
+      return result;
+    });
+  }
+
+  void dismiss([T result]) {
+    if (_route == null) {
+      return;
+    }
+    //pop动画结束后需要调用navigator.removeRoute移除history，不然占用的一块位置仍然无法点击
+    if (_route.animation != null) {
+      final route = _route;
+      _route.animation.addStatusListener((status) {
+        if (status == AnimationStatus.dismissed) {
+          route.navigator.removeRoute(route);
+        }
+      });
+    } else {
+      _route.navigator.removeRoute(_route);
+    }
+    _route.didPop(result ?? _route.currentResult);
+    _route = null;
+  }
 }
 
 class _PopupWindowRoute<T> extends PopupRoute<T> {
   _PopupWindowRoute(
-      {this.position,
-      this.overlayRect,
+      {this.targetContext,
+      this.offset = Offset.zero,
       this.pageBuilder,
       this.barrierLabel,
       this.semanticLabel,
+      bool barrierDismissible = true,
       Duration transitionDuration = const Duration(milliseconds: 200),
       RouteTransitionsBuilder transitionBuilder})
       : _transitionDuration = transitionDuration,
-        _transitionBuilder = transitionBuilder;
+        _transitionBuilder = transitionBuilder,
+        _barrierDismissible = barrierDismissible;
 
+  bool _barrierDismissible;
+  final BuildContext targetContext;
   final RoutePageBuilder pageBuilder;
-  final Rect position;
-  final Rect overlayRect;
+  final Offset offset;
   final String semanticLabel;
 
   final Duration _transitionDuration;
@@ -66,7 +107,7 @@ class _PopupWindowRoute<T> extends PopupRoute<T> {
   Duration get transitionDuration => _transitionDuration;
 
   @override
-  bool get barrierDismissible => true;
+  bool get barrierDismissible => _barrierDismissible;
 
   @override
   Color get barrierColor => null;
@@ -77,6 +118,16 @@ class _PopupWindowRoute<T> extends PopupRoute<T> {
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
+    //获取目标widget的位置
+    final RenderBox target = targetContext.findRenderObject();
+    final RenderBox overlay =
+        Overlay.of(targetContext).context.findRenderObject();
+    final Rect overlayRect = Offset.zero & overlay.size;
+    final Rect position = Rect.fromPoints(
+      target.localToGlobal(target.size.topLeft(offset), ancestor: overlay),
+      target.localToGlobal(target.size.bottomRight(offset), ancestor: overlay),
+    );
+
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
@@ -144,10 +195,6 @@ class _PopupWindowRouteLayout extends SingleChildLayoutDelegate {
   Offset getPositionForChild(Size size, Size childSize) {
     double y = targetPosition.bottom;
     double x = targetPosition.left;
-    print(targetPosition);
-    print(childSize);
-    print(x);
-    print(y);
     // Avoid going outside an area defined as the rectangle 8.0 pixels from the
     // edge of the screen in every direction.
     if (x + childSize.width > size.width) x = size.width - childSize.width;
