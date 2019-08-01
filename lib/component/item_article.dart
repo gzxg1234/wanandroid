@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:wanandroid/app/app.dart';
+import 'package:provider/provider.dart';
+import 'package:wanandroid/main.dart';
 import 'package:wanandroid/app/app_bloc.dart';
-import 'package:wanandroid/bloc/bloc_provider.dart';
+import 'package:wanandroid/base/view_model_provider.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/util/auto_size.dart';
 
@@ -17,7 +18,7 @@ class ArticleItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppBloc appBloc = BlocProvider.of<AppBloc>(context);
+    AppBloc appBloc = Provider.of<AppBloc>(context);
     return Card(
         elevation: 2,
         shape: RoundedRectangleBorder(

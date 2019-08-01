@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:wanandroid/config/config.dart';
 import 'package:wanandroid/data/repo.dart';
 
@@ -29,29 +27,6 @@ class Utils {
       }
       callback(timer);
     });
-  }
-
-  static void toastError(dynamic e, [String defMsg = ""]) {
-    showToast(msg: getErrorMsg(e, defMsg));
-  }
-
-  static void showToast({
-    @required String msg,
-    Toast toastLength,
-    int timeInSecForIos = 1,
-    double fontSize = 16.0,
-    ToastGravity gravity,
-    Color backgroundColor,
-    Color textColor,
-  }) {
-    Fluttertoast.showToast(
-        msg: msg,
-        toastLength: toastLength,
-        timeInSecForIos: timeInSecForIos,
-        fontSize: fontSize,
-        gravity: gravity,
-        backgroundColor: backgroundColor,
-        textColor: textColor);
   }
 
   static String getErrorMsg(dynamic e, [String defaultMsg]) {

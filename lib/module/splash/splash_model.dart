@@ -1,11 +1,11 @@
 import 'dart:ui';
 
-import 'package:wanandroid/base/base_bloc.dart';
+import 'package:wanandroid/base/base_view_model.dart';
 
-class SplashBloc extends BaseBloc {
+class SplashVM extends BaseViewModel {
   final VoidCallback toMain;
 
-  SplashBloc({this.toMain});
+  SplashVM({this.toMain});
 
   @override
   void onInit() {

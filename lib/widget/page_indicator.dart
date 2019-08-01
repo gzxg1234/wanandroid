@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 
 typedef Widget ItemBuilder(BuildContext context, int index, bool active);
 
+
+///指示器
 class PageIndicator extends StatefulWidget {
   final ItemBuilder itemBuilder;
   final int currentItem;

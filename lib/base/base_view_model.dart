@@ -1,48 +1,46 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wanandroid/bloc/bloc.dart';
+import 'package:wanandroid/base/view_model.dart';
 import 'package:wanandroid/data/repo.dart';
-import 'package:wanandroid/util/simple_event.dart';
 import 'package:wanandroid/util/utils.dart';
 
-class BaseBloc extends Bloc {
+class BaseViewModel extends ViewModel {
   @protected
   ApiClient repo;
   final CancelToken _cancelToken = CancelToken();
-  final SimpleNotifier _showLoading = SimpleNotifier();
-  final SimpleNotifier _hideLoading = SimpleNotifier();
 
-  ValueListenable get showLoadingStream => _showLoading;
+  StreamController<String> _streamController = StreamController.broadcast();
 
-  ValueListenable get hideLoadingStream => _hideLoading;
+  Stream<String> get toast => _streamController.stream;
 
-  BaseBloc() {
+  BaseViewModel() {
     repo = ApiClient(_cancelToken);
   }
 
   @override
   void onInit() {
-    // TODO: implement onInit
     super.onInit();
     dLog(this.runtimeType.toString(), "onInit");
+  }
+
+  void toastMsg(String msg) {
+    //放到微任务队列里，确保widget能全部接受到
+    Future.microtask(() {
+      if (!_streamController.isClosed) {
+        _streamController.sink.add(msg);
+      }
+    });
   }
 
   @mustCallSuper
   void onDispose() {
     dLog(this.runtimeType.toString(), "onDispose");
-    _showLoading.dispose();
-    _hideLoading.dispose();
+    _streamController.close();
     _cancelToken.cancel("dispose");
     super.onDispose();
-  }
-
-  void showLoading() {
-    _showLoading.notify();
-  }
-
-  void dismissLoading() {
-    _hideLoading.notify();
   }
 
   void log(String msg) {

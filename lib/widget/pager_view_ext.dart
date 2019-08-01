@@ -4,8 +4,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-const int ITEM_COUNT_RATIO = 300;
-
+///扩展pageview，支持无限循环
+///两种实现无线循环的方法
+///1方法未实现真正的循环，只是足够大
+///2方法实现真正循环，但是滑到在首尾时需要调整page到中间，会出现页面闪动
+///结合两种方法，实现真正循环同时减少滑到首尾的频率
 class ViewPager extends StatefulWidget {
   final Axis scrollDirection;
 
@@ -21,11 +24,8 @@ class ViewPager extends StatefulWidget {
 
   final IndexedWidgetBuilder itemBuilder;
 
-  final bool cycle;
-
   final int autoTurningTime;
 
-  final int itemCount;
   final DragStartBehavior dragStartBehavior;
 
   ViewPager(
@@ -38,8 +38,6 @@ class ViewPager extends StatefulWidget {
       this.pageSnapping = true,
       this.onPageChanged,
       @required this.itemBuilder,
-      this.cycle = false,
-      this.itemCount,
       this.dragStartBehavior = DragStartBehavior.start})
       : super(key: key);
 
@@ -52,6 +50,7 @@ class ViewPager extends StatefulWidget {
 
 class _State extends State<ViewPager> {
   Timer autoTurningTimer;
+  PageControllerExt _pageControllerExt;
 
   @override
   void dispose() {
@@ -63,15 +62,17 @@ class _State extends State<ViewPager> {
   @override
   void initState() {
     super.initState();
+    _pageControllerExt =
+        widget.controller ?? PageControllerExt(initialPage: 0, cycle: false);
     startAutoScroll();
   }
 
   void startAutoScroll() {
     stopAutoScroll();
-    if (widget.itemCount > 1 && widget.autoTurningTime != null) {
+    if (_pageControllerExt.itemCount > 1 && widget.autoTurningTime != null) {
       autoTurningTimer = Timer.periodic(
           Duration(milliseconds: widget.autoTurningTime), (timer) {
-        widget.controller.animateToPage(widget.controller.realPageInt + 1,
+        widget.controller.nextPage(
             duration: Duration(milliseconds: 500), curve: Curves.linear);
       });
     }
@@ -81,55 +82,26 @@ class _State extends State<ViewPager> {
     autoTurningTimer?.cancel();
   }
 
-  static int _expandItemCount(int itemCount) {
-    return itemCount * ITEM_COUNT_RATIO;
-  }
-
-  static ValueChanged<int> _onPageChangedWrapper(ValueChanged<int> valueChanged,
-      int itemCount, bool cycle, PageControllerExt controllerExt) {
-    if (cycle) {
-      return (int index) {
-        if (itemCount > 0) {
-          valueChanged(index % itemCount);
-          if (index == 0) {
-            controllerExt?._superJumpToPage(itemCount * ITEM_COUNT_RATIO ~/ 2);
-          } else if (index == itemCount * ITEM_COUNT_RATIO - 1) {
-            controllerExt?._superJumpToPage(
-                itemCount * ITEM_COUNT_RATIO ~/ 2 + itemCount - 1);
-          }
-        }
-      };
-    }
-    return valueChanged;
-  }
-
-  static IndexedWidgetBuilder _itemBuilderWrapper(
-      IndexedWidgetBuilder builder, int itemCount, bool cycle) {
-    if (cycle) {
-      return (BuildContext context, int index) {
-        return builder?.call(context, index % itemCount);
-      };
-    }
-    return builder;
-  }
-
   @override
   void didUpdateWidget(ViewPager oldWidget) {
-    startAutoScroll();
-    oldWidget.controller.dispose();
+    print(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _pageControllerExt?.dispose();
+      _pageControllerExt =
+          widget.controller ?? PageControllerExt(initialPage: 0, cycle: false);
+      startAutoScroll();
+      setState(() {});
+    }
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
-    final PageControllerExt controller = widget.controller ??
-        PageControllerExt(
-            initialPage: 0, cycle: true, itemCount: widget.itemCount);
-    final ValueChanged<int> onPageChanged = _onPageChangedWrapper(
-        widget.onPageChanged, widget.itemCount, widget.cycle, controller);
+    final ValueChanged<int> onPageChanged =
+        _pageControllerExt._pageChangedWrapper(widget.onPageChanged);
     final IndexedWidgetBuilder itemBuilder =
-        _itemBuilderWrapper(widget.itemBuilder, widget.itemCount, widget.cycle);
-    final itemCount = _expandItemCount(widget.itemCount);
+        _pageControllerExt._itemBuilderWrapper(widget.itemBuilder);
+    final itemCount = _pageControllerExt.realItemCount;
 
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
@@ -149,7 +121,7 @@ class _State extends State<ViewPager> {
         itemCount: itemCount,
         pageSnapping: widget.pageSnapping,
         onPageChanged: onPageChanged,
-        controller: controller,
+        controller: _pageControllerExt,
         itemBuilder: itemBuilder,
       ),
     );
@@ -157,21 +129,22 @@ class _State extends State<ViewPager> {
 }
 
 class PageControllerExt extends PageController {
-  final bool cycle;
+  static const int ITEM_COUNT_RATIO = 300;
+
   final int itemCount;
 
+  final bool cycle;
+
   PageControllerExt({
-    this.cycle = false,
     this.itemCount = 0,
+    this.cycle = false,
     int initialPage = 0,
     bool keepPage = false,
     double viewportFraction = 1.0,
   }) : super(
             initialPage: () {
-              print(
-                  "${initialPage.toString()}，${itemCount * ITEM_COUNT_RATIO ~/ 2}");
               return cycle
-                  ? itemCount * ITEM_COUNT_RATIO ~/ 2 + initialPage
+                  ? itemCount * (ITEM_COUNT_RATIO ~/ 2) + 1 + initialPage
                   : initialPage;
             }(),
             keepPage: keepPage,
@@ -180,24 +153,135 @@ class PageControllerExt extends PageController {
   @override
   Future<void> animateToPage(int page,
       {@required Duration duration, @required Curve curve}) {
-    int curPage = pageInt % itemCount;
-    return super.animateToPage(pageInt + page - curPage,
-        duration: duration, curve: curve);
+    if (cycle) {
+      page = realCurrentPage + page - currentPage;
+    }
+    return super.animateToPage(page, duration: duration, curve: curve);
   }
 
-
+  @override
+  Future<void> nextPage({Duration duration, Curve curve}) {
+    if (cycle) {
+      return animateToPage(currentPage + 1, duration: duration, curve: curve);
+    }
+    if (realCurrentPage == realItemCount - 1) {
+      return animateToPage(0, duration: duration, curve: curve);
+    }
+    return super.nextPage(duration: duration, curve: curve);
+  }
 
   @override
   void jumpToPage(int page) {
-    int curPage = pageInt % itemCount;
-    super.jumpToPage(pageInt + page - curPage);
+    if (cycle) {
+      page = realCurrentPage + page - currentPage;
+    }
+    super.jumpToPage(realCurrentPage + page - currentPage);
   }
 
   void _superJumpToPage(int page) {
     super.jumpToPage(page);
   }
 
-  get realPageInt => this.page.toInt() % itemCount;
+  IndexedWidgetBuilder _itemBuilderWrapper(IndexedWidgetBuilder builder) {
+    if (cycle) {
+      return (BuildContext context, int index) {
+        return builder?.call(context, _getVirtualIndex(index));
+      };
+    }
+    return builder;
+  }
 
-  get pageInt => this.page.toInt();
+//  3 0 1 2 3 0 1 2 3 0 1 2 3 0
+  ValueChanged<int> _pageChangedWrapper(ValueChanged<int> valueChanged) {
+    if (cycle) {
+      return (int index) {
+        print(index);
+        if (itemCount > 0) {
+          valueChanged?.call(_getVirtualIndex(index));
+          if (_isCycleHead(index)) {
+            _superJumpToPage(_centerIndex(itemCount - 1));
+          } else if (_isCycleTail(index)) {
+            _superJumpToPage(_centerIndex(0));
+          }
+        }
+      };
+    }
+    return valueChanged;
+  }
+
+  ///中心位置
+  int _centerIndex(int index) {
+    return itemCount * (ITEM_COUNT_RATIO ~/ 2) + 1 + index;
+  }
+
+  ///实际位置转虚拟位置
+  int _getVirtualIndex(int realIndex) {
+    if (!cycle) {
+      return realIndex;
+    }
+    if (_isCycleHead(realIndex)) return itemCount - 1;
+    if (_isCycleTail(realIndex)) return 0;
+    return (realIndex - 1) % itemCount;
+  }
+
+  ///是否是无限循环头部
+  bool _isCycleHead(int index) => index == 0;
+
+  ///是否是无限循环尾部
+  bool _isCycleTail(int index) => index == itemCount * ITEM_COUNT_RATIO + 1;
+
+  ///当前实际长度
+  get realItemCount => cycle ? (itemCount * ITEM_COUNT_RATIO + 2) : itemCount;
+
+  ///当前实际位置
+  get realCurrentPage => this.page.toInt();
+
+  ///当前虚拟位置
+  get currentPage =>
+      cycle ? (realCurrentPage % itemCount - 1) : realCurrentPage;
 }
+//
+//class CyclePageControllerExt extends PageController {
+//  final bool cycle;
+//  final int itemCount;
+//
+//  PageControllerExt({
+//    this.cycle = false,
+//    this.itemCount = 0,
+//    int initialPage = 0,
+//    bool keepPage = false,
+//    double viewportFraction = 1.0,
+//  }) : super(
+//            initialPage: () {
+//              print(
+//                  "${initialPage.toString()}，${itemCount * ITEM_COUNT_RATIO ~/ 2}");
+//              return cycle
+//                  ? itemCount * ITEM_COUNT_RATIO ~/ 2 + initialPage
+//                  : initialPage;
+//            }(),
+//            keepPage: keepPage,
+//            viewportFraction: viewportFraction);
+//
+//  @override
+//  Future<void> animateToPage(int page,
+//      {@required Duration duration, @required Curve curve}) {
+//    int curPage = pageInt % itemCount;
+//    return super.animateToPage(pageInt + page - curPage,
+//        duration: duration, curve: curve);
+//  }
+//
+//
+//  @override
+//  void jumpToPage(int page) {
+//    int curPage = pageInt % itemCount;
+//    super.jumpToPage(pageInt + page - curPage);
+//  }
+//
+//  void _superJumpToPage(int page) {
+//    super.jumpToPage(page);
+//  }
+//
+//  get realPageInt => this.page.toInt() % itemCount;
+//
+//  get pageInt => this.page.toInt();
+//}

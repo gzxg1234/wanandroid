@@ -31,6 +31,7 @@ dependencies:
 #  webview_flutter: ^0.3.10+3
   url_launcher: ^5.1.1
   android_intent: ^0.3.2
+  provider: ^3.0.0+1
 
   webview_flutter:
     path: plugins/webview_flutter

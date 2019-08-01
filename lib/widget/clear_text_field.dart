@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../r.dart';
 
-@immutable
+///包含清除按钮的输入框
 class ClearableTextField extends StatefulWidget {
   final TextField child;
   final Size clearIconSize;

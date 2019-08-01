@@ -1,14 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:wanandroid/app/app.dart';
+import 'package:provider/provider.dart';
+import 'package:wanandroid/main.dart';
 import 'package:wanandroid/app/app_bloc.dart';
-import 'package:wanandroid/bloc/bloc_provider.dart';
+import 'package:wanandroid/base/view_model_provider.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/util/auto_size.dart';
 
 ///
-/// 文章item
+/// 项目item
 ///
 class ProjectItem extends StatelessWidget {
   final ArticleEntity item;
@@ -17,7 +18,7 @@ class ProjectItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppBloc appBloc = BlocProvider.of<AppBloc>(context);
+    AppBloc appBloc = Provider.of<AppBloc>(context);
     return Card(
         elevation: 2,
         shape: RoundedRectangleBorder(

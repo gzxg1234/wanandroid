@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:wanandroid/app/app.dart';
+import 'package:wanandroid/main.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/widget/common_button.dart';
 import 'package:wanandroid/widget/popup_window.dart';

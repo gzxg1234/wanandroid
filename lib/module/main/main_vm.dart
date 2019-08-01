@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wanandroid/base/base_bloc.dart';
+import 'package:wanandroid/base/base_view_model.dart';
 
-class MainBloc extends BaseBloc {
+class MainVM extends BaseViewModel {
 
   ValueNotifier<int> _currentTab = ValueNotifier(0);
 

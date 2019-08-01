@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 typedef Widget LoadMoreViewBuilder(BuildContext context, LoadMoreState state);
 typedef Future<LoadMoreState> LoadMoreCallback();
 
+///封装实现加载更多ListView
 class LoadMoreListView extends StatefulWidget {
   final int itemCount;
   final LoadMoreViewBuilder loadMoreViewBuilder;

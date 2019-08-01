@@ -1,16 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:wanandroid/app/app_bloc.dart';
-import 'package:wanandroid/base/base_bloc_provider.dart';
-import 'package:wanandroid/bloc/bloc_provider.dart';
+import 'package:wanandroid/base/base_view_model_provider.dart';
+import 'package:wanandroid/base/view_model_provider.dart';
 import 'package:wanandroid/module/catetory/cat_page.dart';
 import 'package:wanandroid/module/home/home_page.dart';
 import 'package:wanandroid/module/projectcat/project_page.dart';
 import 'package:wanandroid/util/auto_size.dart';
 
 import '../../r.dart';
-import 'main_bloc.dart';
+import 'main_vm.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -32,14 +33,13 @@ class _State extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return BaseBlocProvider<MainBloc>(
-      blocBuilder: (_) {
-        return MainBloc();
+    return BaseViewModelProvider<MainVM>(
+      viewModelBuilder: (_) {
+        return MainVM();
       },
-      child: BlocConsumer<MainBloc>(builder: (context, bloc) {
+      child: Consumer<MainVM>(builder: (context, bloc, _) {
         return Scaffold(
-          backgroundColor:
-              BlocProvider.of<AppBloc>(context).theme.backgroundColor,
+          backgroundColor: Provider.of<AppBloc>(context).theme.backgroundColor,
           body: PageView.builder(
             controller: pageController,
             physics: NeverScrollableScrollPhysics(),
@@ -57,10 +57,10 @@ class _State extends State<MainPage> {
           bottomNavigationBar: ValueListenableBuilder<int>(
               valueListenable: bloc.currentTab,
               builder: (context, value, _) {
-                Color selectedColor = BlocProvider.of<AppBloc>(context)
+                Color selectedColor = Provider.of<AppBloc>(context)
                     .theme
                     .bottomNavigatorSelectedColor;
-                Color unSelectedColor = BlocProvider.of<AppBloc>(context)
+                Color unSelectedColor = Provider.of<AppBloc>(context)
                     .theme
                     .bottomNavigatorUnSelectedColor;
                 return BottomNavigationBar(
@@ -71,7 +71,7 @@ class _State extends State<MainPage> {
                       bloc.setCurrentTab(index);
                       pageController.jumpToPage(index);
                     },
-                    backgroundColor: BlocProvider.of<AppBloc>(context)
+                    backgroundColor: Provider.of<AppBloc>(context)
                         .theme
                         .bottomNavigatorBgColor,
                     currentIndex: value,

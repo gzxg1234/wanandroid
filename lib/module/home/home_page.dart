@@ -1,23 +1,25 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:wanandroid/app/app.dart';
+import 'package:provider/provider.dart';
 import 'package:wanandroid/app/hot_word_bloc.dart';
-import 'package:wanandroid/base/base_bloc_provider.dart';
-import 'package:wanandroid/base_widget/base_load_more_view_builder.dart';
-import 'package:wanandroid/base_widget/multi_state_widget.dart';
-import 'package:wanandroid/bloc/bloc_provider.dart';
-import 'package:wanandroid/bloc/builders.dart';
+import 'package:wanandroid/base/base_view_model_provider.dart';
+import 'package:wanandroid/base/value_listener.dart';
+import 'package:wanandroid/component/base_load_more_view_builder.dart';
 import 'package:wanandroid/component/item_article.dart';
+import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/data/bean/bean.dart';
+import 'package:wanandroid/main.dart';
 import 'package:wanandroid/util/auto_size.dart';
+import 'package:wanandroid/util/widget_utils.dart';
 import 'package:wanandroid/widget/load_more_list_view.dart';
 import 'package:wanandroid/widget/page_indicator.dart';
 import 'package:wanandroid/widget/pager_view_ext.dart';
+import 'package:wanandroid/widget/refresh_indicator_fix.dart';
 
 import '../../r.dart';
-import 'home_bloc.dart';
+import 'home_vm.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -34,34 +36,49 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
-  HomeBloc _bloc;
+  HomeVM _bloc;
 
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey();
+  final GlobalKey<RefreshIndicatorFixState> _refreshIndicatorKey = GlobalKey();
+
+  PageControllerExt _pageControllerExt;
+
+  ScrollController _scrollController;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _scrollController = ScrollController();
     Future.microtask(() {
-      BlocProvider.of<HotWordBloc>(context).refresh();
+      Provider.of<HotWordBloc>(context).refresh();
     });
   }
 
+  @override
+  void dispose() {
+    _pageControllerExt?.dispose();
+    super.dispose();
+  }
+
   void handleMainTabRepeatTap() {
-    if(_bloc.state.value == StateValue.Success) {
-      _refreshIndicatorKey.currentState.show();
+    if (_bloc.state.value == StateValue.Success) {
+      if (_scrollController.offset == 0) {
+        _refreshIndicatorKey.currentState.show();
+      } else {
+        scrollToTop(_scrollController);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BaseBlocProvider(
-      blocBuilder: (context) {
-        return _bloc = HomeBloc();
+    return BaseViewModelProvider(
+      viewModelBuilder: (context) {
+        return _bloc = HomeVM();
       },
-      child: BlocConsumer<HomeBloc>(
-        builder: (context, bloc) {
+      child: Consumer<HomeVM>(
+        builder: (context, bloc, _) {
           return Material(
             color: MyApp.getTheme(context).backgroundColor,
             child: Column(
@@ -88,7 +105,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget buildTopBar(BuildContext context, HomeBloc bloc) {
+  Widget buildTopBar(BuildContext context, HomeVM bloc) {
     return DecoratedBox(
       decoration: BoxDecoration(color: MyApp.getTheme(context).primaryColor),
       child: SafeArea(
@@ -120,7 +137,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                               MyApp.getTheme(context).textColorPrimaryInverse),
                       ValueListenableBuilder<List<HotWordEntity>>(
                         valueListenable:
-                            BlocProvider.of<HotWordBloc>(context).hotWordList,
+                            Provider.of<HotWordBloc>(context).hotWordList,
                         builder: (context, list, _) {
                           String wordString =
                               list.map((e) => e.name).toList().join(",");
@@ -147,8 +164,8 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget buildContent(BuildContext context, HomeBloc bloc) {
-    return RefreshIndicator(
+  Widget buildContent(BuildContext context, HomeVM bloc) {
+    return RefreshIndicatorFix(
       key: _refreshIndicatorKey,
       displacement: size(40),
       onRefresh: bloc.refresh,
@@ -157,6 +174,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
           builder: (context, list, _) {
             return LoadMoreListView(
               padding: EdgeInsets.zero,
+              scrollController: _scrollController,
               itemCount: list.length + 1,
               loadMoreCallback: () {
                 return bloc.loadMore();
@@ -171,7 +189,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 var item = list[index - 1];
                 return Container(
                     margin: EdgeInsets.symmetric(horizontal: size(12)),
-                    child: ArticleItem(item,true));
+                    child: ArticleItem(item, true));
               },
               loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
             );
@@ -179,7 +197,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget buildBanner(HomeBloc bloc) {
+  Widget buildBanner(HomeVM vm) {
     return Column(
       children: <Widget>[
         Padding(
@@ -188,53 +206,57 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
             aspectRatio: 2.2,
             child: Stack(
               children: <Widget>[
-                MultiValueListenableBuilder(
-                    valueListenableList: [bloc.bannerData, bloc.bannerIndex],
-                    builder: (context, values, child) {
-                      PageControllerExt controller = PageControllerExt(
-                          initialPage: values[1],
-                          cycle: true,
-                          itemCount: values[0].length);
-                      return ViewPager(
-                        key: ObjectKey(values),
+                ValueListener<HomeBannerState>(
+                  valueListenable: vm.bannerState,
+                  valueChanged: (bannerState) {
+                    _pageControllerExt = PageControllerExt(
+                        initialPage: bannerState.index,
                         cycle: true,
-                        autoTurningTime: 5000,
-                        onPageChanged: bloc.bannerChanged,
-                        itemCount: values[0].length,
-                        controller: controller,
-                        itemBuilder: (context, index) {
-                          BannerEntity item = values[0][index];
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(context, Routes.WEB,
-                                  arguments: {Routes.WEB_ARG_URL: item.url});
-                            },
-                            child: Container(
-                                margin:
-                                    EdgeInsets.symmetric(horizontal: size(14)),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(size(8)),
-                                  child: CachedNetworkImage(
-                                      imageUrl: item.imagePath,
-                                      fit: BoxFit.cover),
-                                )),
-                          );
-                        },
-                      );
-                    })
+                        itemCount: bannerState.list.length);
+                  },
+                  child: ValueListenableBuilder<HomeBannerState>(
+                      valueListenable: vm.bannerState,
+                      builder: (context, bannerState, child) {
+                        return ViewPager(
+                          key: ObjectKey(bannerState.list),
+                          autoTurningTime: 5000,
+                          onPageChanged: vm.bannerChanged,
+                          controller: _pageControllerExt,
+                          itemBuilder: (context, index) {
+                            BannerEntity item = bannerState.list[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(context, Routes.WEB,
+                                    arguments: {Routes.WEB_ARG_URL: item.url});
+                              },
+                              child: Container(
+                                  margin: EdgeInsets.symmetric(
+                                      horizontal: size(14)),
+                                  child: ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(size(8)),
+                                    child: CachedNetworkImage(
+                                        imageUrl: item.imagePath,
+                                        fit: BoxFit.cover),
+                                  )),
+                            );
+                          },
+                        );
+                      }),
+                )
               ],
             ),
           ),
         ),
         Padding(
           padding: EdgeInsets.only(top: size(8)),
-          child: MultiValueListenableBuilder(
-            valueListenableList: [bloc.bannerData, bloc.bannerIndex],
-            builder: (context, values, child) {
+          child: ValueListenableBuilder<HomeBannerState>(
+            valueListenable: vm.bannerState,
+            builder: (context, bannerState, child) {
               return Center(
                 child: PageIndicator(
-                  itemCount: values[0].length,
-                  currentItem: values[1],
+                  itemCount: bannerState.list.length,
+                  currentItem: bannerState.index,
                   margin: size(8),
                   itemBuilder: (context, index, select) {
                     return Container(

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wanandroid/app/themes.dart';
-import 'package:wanandroid/bloc/bloc_provider.dart';
 import 'package:wanandroid/module/main/main_page.dart';
 import 'package:wanandroid/module/splash/splash_page.dart';
 import 'package:wanandroid/module/web/web_page.dart';
 import 'package:wanandroid/util/auto_size.dart';
 
-import 'app_bloc.dart';
-import 'hot_word_bloc.dart';
+import 'app/app_bloc.dart';
+import 'app/hot_word_bloc.dart';
+import 'package:wanandroid/base/view_model_provider.dart';
 
 void main() => runApp(MyApp());
 
@@ -22,19 +23,19 @@ class Routes {
 
 class MyApp extends StatelessWidget {
   static AppTheme getTheme(BuildContext context) {
-    return BlocProvider.of<AppBloc>(context).theme;
+    return Provider.of<AppBloc>(context).theme;
   }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     autoSize(375);
-    return BlocProvider<AppBloc>(
-      blocBuilder: (_) => AppBloc(),
-      child: BlocProvider<HotWordBloc>(
-        blocBuilder: (_) => HotWordBloc(),
-        child: BlocConsumer<AppBloc>(
-          builder: (_, bloc) {
+    return ViewModelProvider<AppBloc>(
+      viewModelBuilder: (_) => AppBloc(),
+      child: ViewModelProvider<HotWordBloc>(
+        viewModelBuilder: (_) => HotWordBloc(),
+        child: Consumer<AppBloc>(
+          builder: (_, bloc, __) {
             return MaterialApp(
               title: '玩Android',
               builder: (context, widget) {

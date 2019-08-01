@@ -1,14 +1,13 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:wanandroid/app/app.dart';
 import 'package:wanandroid/component/common_list.dart';
 import 'package:wanandroid/component/item_article.dart';
 import 'package:wanandroid/data/bean/article_cat_entity.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/data/repo.dart';
+import 'package:wanandroid/main.dart';
 import 'package:wanandroid/util/auto_size.dart';
+import 'package:wanandroid/util/widget_utils.dart';
 
 class ArticleList extends StatefulWidget {
   final CategoryEntity cat;
@@ -17,7 +16,6 @@ class ArticleList extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return ArticleListState();
   }
 }
@@ -25,7 +23,6 @@ class ArticleList extends StatefulWidget {
 class ArticleListState extends State<ArticleList>
     with AutomaticKeepAliveClientMixin<ArticleList> {
   @override
-  // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
   ApiClient _repo = ApiClient();
@@ -39,7 +36,6 @@ class ArticleListState extends State<ArticleList>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _commonListKey = GlobalObjectKey(widget.cat.id);
     _repo = ApiClient();
@@ -49,16 +45,12 @@ class ArticleListState extends State<ArticleList>
     if (_scrollController.offset == 0) {
       _commonListKey.currentState.refresh();
     } else {
-      int mill = min(MAX_SCROLL_TOP_DURATION,
-          (_scrollController.offset / SCROLL_TOP_VELOCITY).round());
-      _scrollController.animateTo(0,
-          duration: Duration(milliseconds: mill), curve: Curves.ease);
+      scrollToTop(_scrollController);
     }
   }
 
   @override
   void didUpdateWidget(ArticleList oldWidget) {
-    // TODO: implement didUpdateWidget
     if (oldWidget.cat.id != widget.cat.id) {
       _commonListKey = GlobalObjectKey(widget.cat.id);
     }

@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:wanandroid/base_widget/base_load_more_view_builder.dart';
-import 'package:wanandroid/base_widget/multi_state_widget.dart';
-import 'package:wanandroid/bloc/builders.dart';
+import 'package:wanandroid/base/builders.dart';
+import 'package:wanandroid/component/base_load_more_view_builder.dart';
+import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/util/utils.dart';
+import 'package:wanandroid/util/widget_utils.dart';
 import 'package:wanandroid/widget/load_more_list_view.dart';
+import 'package:wanandroid/widget/refresh_indicator_fix.dart';
 
 typedef Widget ItemBuilder<T>(BuildContext context, T item, int index);
 typedef Future<PageBean<T>> DataProvider<T>(int page);
@@ -57,7 +59,7 @@ class CommonListState<T> extends State<CommonList<T>> {
 
   int get headersLength => widget.headers?.length ?? 0;
 
-  GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey();
+  GlobalKey<RefreshIndicatorFixState> _refreshIndicatorKey = GlobalKey();
 
   Future<LoadMoreState> loadMore() async {
     return _loadData(_page + 1, false);
@@ -72,7 +74,7 @@ class CommonListState<T> extends State<CommonList<T>> {
     try {
       pageData = await widget.dataProvider(page);
     } catch (e) {
-      Utils.toastError(e, "加载失败");
+      showToast(context: context, msg: Utils.getErrorMsg(e, "加载失败"));
       if (reload) {
         _state.value = StateValue.Error;
       }
@@ -127,14 +129,13 @@ class CommonListState<T> extends State<CommonList<T>> {
               state: state,
               onPressedRetry: _initData,
               successBuilder: (context) {
-                return RefreshIndicator(
+                return RefreshIndicatorFix(
                   displacement: size(40),
                   key: _refreshIndicatorKey,
                   onRefresh: _refreshData,
                   child: MultiValueListenableBuilder(
                       valueListenableList: [_list, _hasMore],
                       builder: (context, values, _) {
-                        print(values[1]);
                         return LoadMoreListView(
                           physics: AlwaysScrollableScrollPhysics(),
                           padding: widget.padding,

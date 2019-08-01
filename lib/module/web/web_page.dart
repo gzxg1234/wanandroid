@@ -3,12 +3,14 @@ import 'dart:io';
 
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:wanandroid/app/app.dart';
-import 'package:wanandroid/bloc/bloc_provider.dart';
-import 'package:wanandroid/module/web/web_bloc.dart';
+import 'package:wanandroid/base/base_view_model_provider.dart';
+import 'package:wanandroid/main.dart';
+import 'package:wanandroid/module/web/web_vm.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/util/utils.dart';
+import 'package:wanandroid/util/widget_utils.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebPage extends StatefulWidget {
@@ -27,8 +29,6 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
   WebViewController _webViewController;
   bool _loading = false;
   String _title = "";
-  final Completer<WebViewController> _controller =
-      Completer<WebViewController>();
 
   @override
   Widget build(BuildContext context) {
@@ -44,29 +44,27 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
         }
         return Future.value(true);
       },
-      child: BlocProvider<WebBloc>(
-        blocBuilder: (context) => WebBloc(),
-        child: BlocConsumer<WebBloc>(builder: (context, bloc) {
+      child: BaseViewModelProvider<WebVM>(
+        viewModelBuilder: (context) => WebVM(),
+        child: Consumer<WebVM>(builder: (context, bloc, _) {
           return Material(
-            child: Scaffold(
-                appBar: buildAppBar(context, bloc),
-                body: Stack(children: <Widget>[
-                  buildWebView(context, bloc),
-                  Offstage(
-                      offstage: !_loading,
-                      child: Container(
-                        color: Colors.green,
-                        height: size(2),
-                        width: size(100),
-                      ))
-                ])),
-          );
+              child: Scaffold(
+                  appBar: buildAppBar(context, bloc),
+                  body: Stack(children: <Widget>[
+                    buildWebView(context, bloc),
+                    Offstage(
+                        offstage: !_loading,
+                        child: Container(
+                            color: Colors.green,
+                            height: size(2),
+                            width: size(100)))
+                  ])));
         }),
       ),
     );
   }
 
-  Widget buildAppBar(BuildContext context, WebBloc bloc) {
+  Widget buildAppBar(BuildContext context, WebVM bloc) {
     return AppBar(
       elevation: 4.0,
       leading: IconButton(
@@ -85,11 +83,11 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
                   fontSize: size(16),
                   color: MyApp.getTheme(context).textColorPrimaryInverse),
             ),
-      actions: buildActions(),
+      actions: buildActions(context),
     );
   }
 
-  List<Widget> buildActions() {
+  List<Widget> buildActions(BuildContext context) {
     return <Widget>[
       Offstage(
           offstage: _webViewController == null,
@@ -112,7 +110,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
             onSelected: (item) {
               switch (item) {
                 case MenuItem.openInBrowser:
-                  _openInBrowser();
+                  _openInBrowser(context);
                   break;
               }
             },
@@ -130,12 +128,12 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
     ];
   }
 
-  void _openInBrowser() async {
+  void _openInBrowser(BuildContext context) async {
     String url = await _webViewController?.currentUrl();
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      Utils.showToast(msg: "没有可打开的浏览器");
+      showToast(context: context, msg: "没有可打开的浏览器");
     }
   }
 
@@ -157,7 +155,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  Widget buildWebView(BuildContext context, WebBloc bloc) {
+  Widget buildWebView(BuildContext context, WebVM bloc) {
     return Offstage(
         offstage: _webViewController == null,
         child: WebView(
