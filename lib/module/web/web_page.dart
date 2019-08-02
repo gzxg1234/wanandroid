@@ -5,7 +5,9 @@ import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
+import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/main.dart';
 import 'package:wanandroid/module/web/web_vm.dart';
 import 'package:wanandroid/util/auto_size.dart';
@@ -29,6 +31,12 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
   WebViewController _webViewController;
   bool _loading = false;
   String _title = "";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -62,21 +62,23 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
   }
 
   void _setupScrollListener() {
-    _scrollController?.dispose();
     _scrollController = widget.scrollController ?? ScrollController();
-    _scrollController.addListener(() {
-      if (!loading &&
-          _scrollController.position.pixels ==
-              _scrollController.position.maxScrollExtent &&
-          state == LoadMoreState.Normal) {
-        _loadMore();
-      }
-    });
+    _scrollController.addListener(_scrollChanged);
+  }
+
+  void _scrollChanged() {
+    if (!loading &&
+        _scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        state == LoadMoreState.Normal) {
+      _loadMore();
+    }
   }
 
   @override
   void didUpdateWidget(LoadMoreListView oldWidget) {
     if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController.removeListener(_scrollChanged);
       _setupScrollListener();
     }
     if (oldWidget.hasMore != widget.hasMore) {

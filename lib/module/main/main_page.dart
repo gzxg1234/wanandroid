@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:wanandroid/app/app_bloc.dart';
+import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
-import 'package:wanandroid/base/view_model_provider.dart';
+import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/module/catetory/cat_page.dart';
 import 'package:wanandroid/module/home/home_page.dart';
 import 'package:wanandroid/module/projectcat/project_page.dart';
@@ -23,12 +24,6 @@ class MainPage extends StatefulWidget {
 
 class _State extends State<MainPage> {
   final PageController pageController = PageController(initialPage: 0);
-  List<GlobalKey<dynamic>> pageKeys = [
-    GlobalKey(debugLabel: "HomePage Key"),
-    GlobalKey(debugLabel: "HomePage Key"),
-    GlobalKey(debugLabel: "HomePage Key"),
-    GlobalKey(debugLabel: "HomePage Key")
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +40,11 @@ class _State extends State<MainPage> {
             physics: NeverScrollableScrollPhysics(),
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
-                return HomePage(key: pageKeys[0]);
+                return HomePage();
               } else if (index == 1) {
-                return CatPage(key: pageKeys[1]);
+                return CatPage();
               } else if (index == 2) {
-                return ProjectPage(key: pageKeys[2]);
+                return ProjectPage();
               }
               return Container();
             },
@@ -66,7 +61,7 @@ class _State extends State<MainPage> {
                 return BottomNavigationBar(
                     onTap: (index) {
                       if (index == bloc.currentTab.value) {
-                        pageKeys[index].currentState.handleMainTabRepeatTap();
+                        EventBus.send(MainTabReTapEvent(index));
                       }
                       bloc.setCurrentTab(index);
                       pageController.jumpToPage(index);
@@ -107,6 +102,5 @@ class _State extends State<MainPage> {
         );
       }),
     );
-    ;
   }
 }

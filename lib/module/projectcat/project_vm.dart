@@ -41,7 +41,7 @@ class ProjectVM extends BaseViewModel {
         ..insert(0, CategoryEntity(name: "最新", id: null));
       _tabState.value = _tabState.value.clone()
         ..list = cats
-        ..index = 5;
+        ..index = 0;
       if (init) {
         _state.value = StateValue.Success;
       }

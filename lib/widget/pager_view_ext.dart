@@ -14,8 +14,6 @@ class ViewPager extends StatefulWidget {
 
   final bool reverse;
 
-  final PageControllerExt controller;
-
   final ScrollPhysics physics;
 
   final bool pageSnapping;
@@ -28,48 +26,47 @@ class ViewPager extends StatefulWidget {
 
   final DragStartBehavior dragStartBehavior;
 
+  final ViewPagerController controller;
+
   ViewPager(
       {Key key,
       this.scrollDirection = Axis.horizontal,
       this.reverse = false,
       this.autoTurningTime,
-      this.controller,
+      ViewPagerController controller,
       this.physics,
       this.pageSnapping = true,
       this.onPageChanged,
       @required this.itemBuilder,
       this.dragStartBehavior = DragStartBehavior.start})
-      : super(key: key);
+      : controller = controller ?? ViewPagerController(),
+        super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
-    return _State();
+    print('createState');
+    return ViewPagerState();
   }
 }
 
-class _State extends State<ViewPager> {
+class ViewPagerState extends State<ViewPager> {
   Timer autoTurningTimer;
-  PageControllerExt _pageControllerExt;
 
   @override
   void dispose() {
-    stopAutoScroll();
-    widget.controller.dispose();
+    _stopAutoScroll();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _pageControllerExt =
-        widget.controller ?? PageControllerExt(initialPage: 0, cycle: false);
-    startAutoScroll();
+    _startAutoScroll();
   }
 
-  void startAutoScroll() {
-    stopAutoScroll();
-    if (_pageControllerExt.itemCount > 1 && widget.autoTurningTime != null) {
+  void _startAutoScroll() {
+    _stopAutoScroll();
+    if (widget.controller.itemCount > 1 && widget.autoTurningTime != null) {
       autoTurningTimer = Timer.periodic(
           Duration(milliseconds: widget.autoTurningTime), (timer) {
         widget.controller.nextPage(
@@ -78,19 +75,15 @@ class _State extends State<ViewPager> {
     }
   }
 
-  void stopAutoScroll() {
+  void _stopAutoScroll() {
     autoTurningTimer?.cancel();
   }
 
   @override
   void didUpdateWidget(ViewPager oldWidget) {
-    print(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      _pageControllerExt?.dispose();
-      _pageControllerExt =
-          widget.controller ?? PageControllerExt(initialPage: 0, cycle: false);
-      startAutoScroll();
-      setState(() {});
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.autoTurningTime != widget.autoTurningTime) {
+      _startAutoScroll();
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -98,18 +91,19 @@ class _State extends State<ViewPager> {
   @override
   Widget build(BuildContext context) {
     final ValueChanged<int> onPageChanged =
-        _pageControllerExt._pageChangedWrapper(widget.onPageChanged);
+        widget.controller._pageChangedWrapper(widget.onPageChanged);
     final IndexedWidgetBuilder itemBuilder =
-        _pageControllerExt._itemBuilderWrapper(widget.itemBuilder);
-    final itemCount = _pageControllerExt.realItemCount;
+        widget.controller._itemBuilderWrapper(widget.itemBuilder);
+    final itemCount = widget.controller.realItemCount;
 
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
+        ///用户滑动时停止滚动任务
         if (n is UserScrollNotification) {
           if (n.direction == ScrollDirection.idle) {
-            startAutoScroll();
+            _startAutoScroll();
           } else {
-            stopAutoScroll();
+            _stopAutoScroll();
           }
         }
         return false;
@@ -121,25 +115,25 @@ class _State extends State<ViewPager> {
         itemCount: itemCount,
         pageSnapping: widget.pageSnapping,
         onPageChanged: onPageChanged,
-        controller: _pageControllerExt,
+        controller: widget.controller,
         itemBuilder: itemBuilder,
       ),
     );
   }
 }
 
-class PageControllerExt extends PageController {
+class ViewPagerController extends PageController {
   static const int ITEM_COUNT_RATIO = 300;
 
   final int itemCount;
 
   final bool cycle;
 
-  PageControllerExt({
+  ViewPagerController({
     this.itemCount = 0,
     this.cycle = false,
     int initialPage = 0,
-    bool keepPage = false,
+    bool keepPage = true,
     double viewportFraction = 1.0,
   }) : super(
             initialPage: () {
@@ -175,7 +169,7 @@ class PageControllerExt extends PageController {
     if (cycle) {
       page = realCurrentPage + page - currentPage;
     }
-    super.jumpToPage(realCurrentPage + page - currentPage);
+    super.jumpToPage(page);
   }
 
   void _superJumpToPage(int page) {
@@ -191,11 +185,9 @@ class PageControllerExt extends PageController {
     return builder;
   }
 
-//  3 0 1 2 3 0 1 2 3 0 1 2 3 0
   ValueChanged<int> _pageChangedWrapper(ValueChanged<int> valueChanged) {
     if (cycle) {
       return (int index) {
-        print(index);
         if (itemCount > 0) {
           valueChanged?.call(_getVirtualIndex(index));
           if (_isCycleHead(index)) {
@@ -231,13 +223,14 @@ class PageControllerExt extends PageController {
   bool _isCycleTail(int index) => index == itemCount * ITEM_COUNT_RATIO + 1;
 
   ///当前实际长度
-  get realItemCount => cycle ? (itemCount * ITEM_COUNT_RATIO + 2) : itemCount;
+  int get realItemCount =>
+      cycle ? (itemCount * ITEM_COUNT_RATIO + 2) : itemCount;
 
   ///当前实际位置
-  get realCurrentPage => this.page.toInt();
+  int get realCurrentPage => this.page.toInt();
 
   ///当前虚拟位置
-  get currentPage =>
+  int get currentPage =>
       cycle ? (realCurrentPage % itemCount - 1) : realCurrentPage;
 }
 //

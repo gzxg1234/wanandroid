@@ -33,12 +33,11 @@ class ProjectListState extends State<ProjectList>
 
   GlobalObjectKey<CommonListState> _commonListKey;
 
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _commonListKey = GlobalObjectKey(widget.cat.id);
+    _commonListKey = GlobalObjectKey(widget.cat);
     _repo = ApiClient();
   }
 
@@ -52,9 +51,8 @@ class ProjectListState extends State<ProjectList>
 
   @override
   void didUpdateWidget(ProjectList oldWidget) {
-    // TODO: implement didUpdateWidget
-    if (oldWidget.cat.id != widget.cat.id) {
-      _commonListKey = GlobalObjectKey(widget.cat.id);
+    if (oldWidget.cat != widget.cat) {
+      _commonListKey = GlobalObjectKey(widget.cat);
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -76,6 +74,11 @@ class ProjectListState extends State<ProjectList>
         scrollController: _scrollController,
         startPage: 1,
         dataProvider: (page) {
+          if(widget.cat.id==null){
+            return _repo.getNewsProjectList(page).then((e) {
+              return PageBean(e.datas, !e.over);
+            });
+          }
           return _repo.getProjectList(page, widget.cat.id).then((e) {
             return PageBean(e.datas, !e.over);
           });

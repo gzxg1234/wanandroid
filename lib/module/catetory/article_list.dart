@@ -37,7 +37,7 @@ class ArticleListState extends State<ArticleList>
   @override
   void initState() {
     super.initState();
-    _commonListKey = GlobalObjectKey(widget.cat.id);
+    _commonListKey = GlobalObjectKey(widget.cat);
     _repo = ApiClient();
   }
 
@@ -51,8 +51,8 @@ class ArticleListState extends State<ArticleList>
 
   @override
   void didUpdateWidget(ArticleList oldWidget) {
-    if (oldWidget.cat.id != widget.cat.id) {
-      _commonListKey = GlobalObjectKey(widget.cat.id);
+    if (oldWidget.cat != widget.cat) {
+      _commonListKey = GlobalObjectKey(widget.cat);
     }
     super.didUpdateWidget(oldWidget);
   }

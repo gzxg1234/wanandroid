@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
-import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/component/more_tab_window.dart';
+import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_cat_entity.dart';
+import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/widget/refresh_indicator_fix.dart';
 import 'package:wanandroid/widget/rotation_view.dart';
@@ -48,8 +51,22 @@ class _State extends State<CatPage>
 
   GlobalKey<RotationViewState> _dropDownButtonKey = GlobalKey();
 
+  StreamSubscription<MainTabReTapEvent> eventSubscription;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    eventSubscription = EventBus.on<MainTabReTapEvent>().listen((e) {
+      if (e.index == 1) {
+        handleMainTabRepeatTap();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    eventSubscription?.cancel();
     _moreTabWindow?.dismiss();
     _tabController?.dispose();
     _subTabController?.dispose();
