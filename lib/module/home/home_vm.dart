@@ -37,8 +37,8 @@ class HomeVM extends BaseViewModel {
   ValueListenable<HomeBannerState> get bannerState => _bannerState;
 
   @override
-  void onInit() {
-    super.onInit();
+  void initial() {
+    super.initial();
     retry();
   }
 

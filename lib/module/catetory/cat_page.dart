@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wanandroid/app/event_bus.dart';
+import 'package:wanandroid/base/base_state.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
 import 'package:wanandroid/component/more_tab_window.dart';
 import 'package:wanandroid/component/multi_state_widget.dart';
@@ -24,12 +24,15 @@ class CatPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return _State();
+    return CatPageState();
   }
 }
 
-class _State extends State<CatPage>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+class CatPageState extends State<CatPage>
+    with
+        AutomaticKeepAliveClientMixin,
+        TickerProviderStateMixin,
+        BaseStateMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -51,13 +54,10 @@ class _State extends State<CatPage>
 
   GlobalKey<RotationViewState> _dropDownButtonKey = GlobalKey();
 
-  StreamSubscription<MainTabReTapEvent> eventSubscription;
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    eventSubscription = EventBus.on<MainTabReTapEvent>().listen((e) {
+    onEvent<MainTabReTapEvent>((e) {
       if (e.index == 1) {
         handleMainTabRepeatTap();
       }
@@ -66,7 +66,6 @@ class _State extends State<CatPage>
 
   @override
   void dispose() {
-    eventSubscription?.cancel();
     _moreTabWindow?.dismiss();
     _tabController?.dispose();
     _subTabController?.dispose();
@@ -75,7 +74,10 @@ class _State extends State<CatPage>
 
   void handleMainTabRepeatTap() {
     if (_catBloc.state.value == StateValue.Success) {
-      _refreshIndicatorKey.currentState.show();
+      EventBus.send(MainTabShowRefreshEvent(1, true));
+      _refreshIndicatorKey.currentState.show().whenComplete(() {
+        EventBus.send(MainTabShowRefreshEvent(1, false));
+      });
     }
   }
 
@@ -128,7 +130,7 @@ class _State extends State<CatPage>
                                             MyApp.getTheme(context)
                                                 .tabBarUnSelectedColor,
                                         labelStyle:
-                                            TextStyle(fontSize: size(14)),
+                                            TextStyle(fontSize: sizeW(14)),
                                         tabs: () {
                                           return tabState.list
                                               .map((e) => Tab(
@@ -138,29 +140,33 @@ class _State extends State<CatPage>
                                         }(),
                                       ),
                                     ),
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkResponse(
-                                        containedInkWell: true,
-                                        customBorder: CircleBorder(),
-                                        onTap: () {
-                                          _dropDownButtonKey.currentState
-                                              ?.forward();
-                                          _showMoreCat(tabState.list);
-                                        },
-                                        child: SizedBox(
-                                          width: 46,
-                                          height: 46,
-                                          child: RotationView(
-                                            key: _dropDownButtonKey,
-                                            fromDegree: 0,
-                                            toDegree: -180,
-                                            duration:
-                                                Duration(milliseconds: 300),
-                                            child: Icon(
-                                              Icons.arrow_drop_down,
-                                              color: MyApp.getTheme(context)
-                                                  .iconColor,
+                                    Semantics(
+                                      button: true,
+                                      label: "显示全部分类",
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkResponse(
+                                          containedInkWell: true,
+                                          customBorder: CircleBorder(),
+                                          onTap: () {
+                                            _dropDownButtonKey.currentState
+                                                ?.forward();
+                                            _showMoreCat(tabState.list);
+                                          },
+                                          child: SizedBox(
+                                            width: 46,
+                                            height: 46,
+                                            child: RotationView(
+                                              key: _dropDownButtonKey,
+                                              fromDegree: 0,
+                                              toDegree: -180,
+                                              duration:
+                                                  Duration(milliseconds: 300),
+                                              child: Icon(
+                                                Icons.arrow_drop_down,
+                                                color: MyApp.getTheme(context)
+                                                    .iconColor,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -222,9 +228,9 @@ class _State extends State<CatPage>
                                               MyApp.getTheme(context)
                                                   .tabBarUnSelectedColor,
                                           unselectedLabelStyle:
-                                              TextStyle(fontSize: size(14)),
+                                              TextStyle(fontSize: sizeW(14)),
                                           labelStyle:
-                                              TextStyle(fontSize: size(14)),
+                                              TextStyle(fontSize: sizeW(14)),
                                           tabs: () {
                                             return tabState.list
                                                 .map((e) => Tab(

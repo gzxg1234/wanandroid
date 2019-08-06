@@ -29,13 +29,13 @@ dependencies:
   json_annotation: ^2.4.0
   cached_network_image: 1.1.1
 #  webview_flutter: ^0.3.10+3
-  url_launcher: ^5.1.1
+  url_launcher: ^5.1.2
   android_intent: ^0.3.2
   provider: ^3.0.0+1
-
+  flutter_html: ^0.10.4
   webview_flutter:
     path: plugins/webview_flutter
-#  rxdart: ^0.22.0
+  rxdart: ^0.22.1
 
 dev_dependencies:
   flutter_test:
@@ -57,6 +57,7 @@ flutter:
     # assets-generator-begin
     # assets/img/*
     - assets/img/ic_clear.png
+    - assets/img/ic_empty.png
     - assets/img/ic_failed.png
     - assets/img/ic_loading.png
     - assets/img/logo.png

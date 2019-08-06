@@ -2,26 +2,24 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wanandroid/component/common_list.dart';
 import 'package:wanandroid/component/item_article.dart';
-import 'package:wanandroid/data/bean/article_cat_entity.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/data/repo.dart';
 import 'package:wanandroid/main.dart';
 import 'package:wanandroid/util/auto_size.dart';
-import 'package:wanandroid/util/widget_utils.dart';
 
-class ArticleList extends StatefulWidget {
-  final CategoryEntity cat;
+class SearchList extends StatefulWidget {
+  final String word;
 
-  const ArticleList({Key key, this.cat}) : super(key: key);
+  const SearchList({Key key, this.word}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return ArticleListState();
+    return SearchListState();
   }
 }
 
-class ArticleListState extends State<ArticleList>
-    with AutomaticKeepAliveClientMixin<ArticleList> {
+class SearchListState extends State<SearchList>
+    with AutomaticKeepAliveClientMixin<SearchList> {
   @override
   bool get wantKeepAlive => true;
 
@@ -34,22 +32,14 @@ class ArticleListState extends State<ArticleList>
   @override
   void initState() {
     super.initState();
-    _commonListKey = GlobalObjectKey(widget.cat);
+    _commonListKey = GlobalObjectKey(widget.word);
     _repo = ApiClient();
   }
 
-  void onParentTabTap() {
-    if (_scrollController.offset == 0) {
-      _commonListKey.currentState.refresh();
-    } else {
-      scrollToTop(_scrollController);
-    }
-  }
-
   @override
-  void didUpdateWidget(ArticleList oldWidget) {
-    if (oldWidget.cat != widget.cat) {
-      _commonListKey = GlobalObjectKey(widget.cat);
+  void didUpdateWidget(SearchList oldWidget) {
+    if (oldWidget.word != widget.word) {
+      _commonListKey = GlobalObjectKey(widget.word);
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -71,7 +61,7 @@ class ArticleListState extends State<ArticleList>
         scrollController: _scrollController,
         startPage: 0,
         dataProvider: (page) {
-          return _repo.getArticleList(page, widget.cat.id).then((e) {
+          return _repo.search(widget.word, page).then((e) {
             return PageBean(e.datas, !e.over);
           });
         },
@@ -79,7 +69,7 @@ class ArticleListState extends State<ArticleList>
           return SizedBox(height: sizeW(8));
         },
         widgetBuilder: (BuildContext context, item, int index) {
-          return ArticleItem(item);
+          return ArticleItem(item,parseTitle: true);
         },
       ),
     );

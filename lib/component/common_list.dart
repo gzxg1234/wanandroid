@@ -10,6 +10,9 @@ import 'package:wanandroid/util/widget_utils.dart';
 import 'package:wanandroid/widget/load_more_list_view.dart';
 import 'package:wanandroid/widget/refresh_indicator_fix.dart';
 
+import '../main.dart';
+import '../r.dart';
+
 typedef Widget ItemBuilder<T>(BuildContext context, T item, int index);
 typedef Future<PageBean<T>> DataProvider<T>(int page);
 
@@ -130,13 +133,14 @@ class CommonListState<T> extends State<CommonList<T>> {
               onPressedRetry: _initData,
               successBuilder: (context) {
                 return RefreshIndicatorFix(
-                  displacement: size(40),
+                  displacement: sizeW(40),
                   key: _refreshIndicatorKey,
                   onRefresh: _refreshData,
                   child: MultiValueListenableBuilder(
                       valueListenableList: [_list, _hasMore],
                       builder: (context, values, _) {
                         return LoadMoreListView(
+                          emptyView: Empty(),
                           physics: AlwaysScrollableScrollPhysics(),
                           padding: widget.padding,
                           itemCount: values[0].length + headersLength,
@@ -158,5 +162,41 @@ class CommonListState<T> extends State<CommonList<T>> {
                 );
               });
         });
+  }
+}
+
+class Empty extends StatelessWidget {
+  const Empty({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.transparent,
+      constraints: BoxConstraints.expand(),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Image.asset(
+            R.assetsImgIcEmpty,
+            color: MyApp.getTheme(context).textColorSecondary,
+            width: sizeW(100),
+            fit: BoxFit.fitWidth,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: sizeW(16)),
+            child: Text(
+              "木有数据~",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: MyApp.getTheme(context).textColorSecondary,
+                  fontSize: sizeW(14)),
+            ),
+          ),
+          //整体往上移动一丢丢
+          SizedBox(height: sizeW(50))
+        ],
+      ),
+    );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:wanandroid/app/themes.dart';
-import 'package:wanandroid/base/view_model.dart';
+import 'package:wanandroid/base/base_view_model.dart';
 
-class AppBloc extends ViewModel {
+class AppBloc extends BaseViewModel {
   AppTheme _theme = AppTheme();
 
   AppTheme get theme => _theme;
@@ -9,17 +9,5 @@ class AppBloc extends ViewModel {
   void changeTheme(AppTheme appTheme) {
     _theme = appTheme;
     notifyListeners();
-  }
-
-  @override
-  void onInit() {
-    // TODO: implement onInit
-    super.onInit();
-  }
-
-  @override
-  void onDispose() {
-    // TODO: implement onDispose
-    super.onDispose();
   }
 }

@@ -23,22 +23,30 @@ class Preferences {
     }
   }
 
+  static Type _type<T>() {
+    return T;
+  }
+
   static Future<T> get<T>(String key, T defValue) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (!prefs.containsKey(key)) {
       return defValue;
     }
+    if (T == _type<List<String>>()) {
+      return Future.value(prefs.getStringList(key) as T);
+    }
     return Future.value(prefs.get(key) as T);
   }
 
-  static Future<T> getJson<T>(String key, Converter<T> converter) async {
+  static Future<T> getJson<T>(String key, [Converter<T> converter]) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String jsonStr = prefs.getString(key);
     if (jsonStr == null) {
       return null;
     }
-    return converter(json.decode(jsonStr));
+    dynamic jsonData = json.decode(jsonStr);
+    return converter != null ? converter(jsonData) : jsonData;
   }
 }
 
-typedef T Converter<T>(Map<String, dynamic> json);
+typedef T Converter<T>(dynamic json);

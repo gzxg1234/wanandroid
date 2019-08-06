@@ -8,9 +8,9 @@ class SplashVM extends BaseViewModel {
   SplashVM({this.toMain});
 
   @override
-  void onInit() {
+  void initial() {
     // TODO: implement onInit
-    super.onInit();
+    super.initial();
     Future.delayed(Duration(seconds: 1), () {
       toMain?.call();
     });

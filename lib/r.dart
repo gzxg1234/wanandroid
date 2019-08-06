@@ -1,6 +1,8 @@
 class R {
   /// ![](http://127.0.0.1:9528/assets/img/ic_clear.png)
   static final String assetsImgIcClear = 'assets/img/ic_clear.png';
+  /// ![](http://127.0.0.1:9528/assets/img/ic_empty.png)
+  static final String assetsImgIcEmpty = 'assets/img/ic_empty.png';
   /// ![](http://127.0.0.1:9528/assets/img/ic_failed.png)
   static final String assetsImgIcFailed = 'assets/img/ic_failed.png';
   /// ![](http://127.0.0.1:9528/assets/img/ic_loading.png)

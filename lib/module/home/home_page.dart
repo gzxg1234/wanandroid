@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/app/hot_word_bloc.dart';
+import 'package:wanandroid/base/base_state.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
 import 'package:wanandroid/component/base_load_more_view_builder.dart';
 import 'package:wanandroid/component/item_article.dart';
@@ -34,9 +33,9 @@ class HomePage extends StatefulWidget {
   }
 }
 
-class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
+class _State extends State<HomePage>
+    with AutomaticKeepAliveClientMixin, BaseStateMixin {
   @override
-  // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
   HomeVM _bloc;
@@ -47,33 +46,32 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
   ScrollController _scrollController;
 
-  StreamSubscription eventSubscription;
+  bool hotWordRefreshed = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    eventSubscription = EventBus.on<MainTabReTapEvent>().listen((e) {
+    onEvent<MainTabReTapEvent>((e) {
       if (e.index == 0) {
         handleMainTabRepeatTap();
       }
     });
     _scrollController = ScrollController();
-    Future.microtask(() {
-      Provider.of<HotWordBloc>(context).refresh();
-    });
   }
 
   @override
-  void dispose() {
-    eventSubscription?.cancel();
-    super.dispose();
+  void afterInitState() {
+    super.afterInitState();
+    Provider.of<HotWordVM>(context).refresh();
   }
 
   void handleMainTabRepeatTap() {
     if (_bloc.state.value == StateValue.Success) {
       if (_scrollController.offset == 0) {
-        _refreshIndicatorKey.currentState.show();
+        EventBus.send(MainTabShowRefreshEvent(0, true));
+        _refreshIndicatorKey.currentState.show().whenComplete(() {
+          EventBus.send(MainTabShowRefreshEvent(0, false));
+        });
       } else {
         scrollToTop(_scrollController);
       }
@@ -83,7 +81,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BaseViewModelProvider(
+    return BaseViewModelProvider<HomeVM>(
       viewModelBuilder: (context) {
         return _bloc = HomeVM();
       },
@@ -122,50 +120,55 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
       decoration: BoxDecoration(color: MyApp.getTheme(context).primaryColor),
       child: SafeArea(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: size(16)),
-          constraints: BoxConstraints.expand(height: size(50)),
+          padding: EdgeInsets.symmetric(horizontal: sizeW(16)),
+          constraints: BoxConstraints.expand(height: sizeW(50)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Image(
                 image: AssetImage(R.assetsImgLogo),
-                height: size(30),
+                height: sizeW(30),
                 fit: BoxFit.fitHeight,
                 color: MyApp.getTheme(context).iconColor,
               ),
               Expanded(
-                child: Container(
-                  height: size(32),
-                  padding: EdgeInsets.symmetric(horizontal: size(8)),
-                  margin: EdgeInsets.only(left: size(16)),
-                  decoration: BoxDecoration(
-                      color: Colors.white30,
-                      borderRadius: BorderRadius.circular(size(4))),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Icon(Icons.search,
-                          color:
-                              MyApp.getTheme(context).textColorPrimaryInverse),
-                      ValueListenableBuilder<List<HotWordEntity>>(
-                        valueListenable:
-                            Provider.of<HotWordBloc>(context).hotWordList,
-                        builder: (context, list, _) {
-                          String wordString =
-                              list.map((e) => e.name).toList().join(",");
-                          return Expanded(
-                            child: Text(
-                              "${list.isEmpty ? "搜索" : wordString}",
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  color: MyApp.getTheme(context)
-                                      .textColorPrimaryInverse,
-                                  fontSize: size(14)),
-                            ),
-                          );
-                        },
-                      )
-                    ],
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, Routes.SEARCH);
+                  },
+                  child: Container(
+                    height: sizeW(32),
+                    padding: EdgeInsets.symmetric(horizontal: sizeW(8)),
+                    margin: EdgeInsets.only(left: sizeW(16)),
+                    decoration: BoxDecoration(
+                        color: Colors.white30,
+                        borderRadius: BorderRadius.circular(sizeW(4))),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(Icons.search,
+                            color: MyApp.getTheme(context)
+                                .textColorPrimaryInverse),
+                        ValueListenableBuilder<List<HotWordEntity>>(
+                          valueListenable:
+                              Provider.of<HotWordVM>(context).hotWordList,
+                          builder: (context, list, _) {
+                            String wordString =
+                                list.map((e) => e.name).toList().join(",");
+                            return Expanded(
+                              child: Text(
+                                "${list.isEmpty ? "搜索" : wordString}",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    color: MyApp.getTheme(context)
+                                        .textColorPrimaryInverse,
+                                    fontSize: sizeW(14)),
+                              ),
+                            );
+                          },
+                        )
+                      ],
+                    ),
                   ),
                 ),
               )
@@ -179,7 +182,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
   Widget buildContent(BuildContext context, HomeVM bloc) {
     return RefreshIndicatorFix(
       key: _refreshIndicatorKey,
-      displacement: size(40),
+      displacement: sizeW(40),
       onRefresh: bloc.refresh,
       child: ValueListenableBuilder<List<ArticleEntity>>(
           valueListenable: bloc.list,
@@ -192,7 +195,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 return bloc.loadMore();
               },
               separatorBuilder: (c, index) => SizedBox(
-                height: size(10),
+                height: sizeW(10),
               ),
               itemBuilder: (context, index) {
                 if (index == 0) {
@@ -200,8 +203,8 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 }
                 var item = list[index - 1];
                 return Container(
-                    margin: EdgeInsets.symmetric(horizontal: size(12)),
-                    child: ArticleItem(item, true));
+                    margin: EdgeInsets.symmetric(horizontal: sizeW(12)),
+                    child: ArticleItem(item, showFlag: true));
               },
               loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
             );
@@ -213,7 +216,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
     return Column(
       children: <Widget>[
         Padding(
-          padding: EdgeInsets.only(top: size(16)),
+          padding: EdgeInsets.only(top: sizeW(16)),
           child: AspectRatio(
             aspectRatio: 2.2,
             child: Stack(
@@ -238,15 +241,22 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                               Navigator.pushNamed(context, Routes.WEB,
                                   arguments: {Routes.WEB_ARG_URL: item.url});
                             },
-                            child: Container(
-                                margin:
-                                    EdgeInsets.symmetric(horizontal: size(14)),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(size(8)),
-                                  child: CachedNetworkImage(
-                                      imageUrl: item.imagePath,
-                                      fit: BoxFit.cover),
-                                )),
+                            child: Semantics(
+                              button: false,
+                              label: item.title,
+                              child: ExcludeSemantics(
+                                child: Container(
+                                    margin: EdgeInsets.symmetric(
+                                        horizontal: sizeW(14)),
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(sizeW(8)),
+                                      child: CachedNetworkImage(
+                                          imageUrl: item.imagePath,
+                                          fit: BoxFit.cover),
+                                    )),
+                              ),
+                            ),
                           );
                         },
                       );
@@ -256,7 +266,7 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
           ),
         ),
         Padding(
-            padding: EdgeInsets.only(top: size(8)),
+            padding: EdgeInsets.only(top: sizeW(8)),
             child: ValueListenableBuilder<HomeBannerState>(
               valueListenable: vm.bannerState,
               builder: (context, bannerState, child) {
@@ -264,18 +274,18 @@ class _State extends State<HomePage> with AutomaticKeepAliveClientMixin {
                   child: PageIndicator(
                     itemCount: bannerState.list.length,
                     currentItem: bannerState.index,
-                    margin: size(8),
+                    margin: sizeW(8),
                     itemBuilder: (context, index, select) {
                       return Container(
-                        width: size(16),
-                        height: size(4),
+                        width: sizeW(16),
+                        height: sizeW(4),
                         decoration: BoxDecoration(
                             color: select
                                 ? MyApp.getTheme(context)
                                     .pageIndicatorActiveColor
                                 : MyApp.getTheme(context)
                                     .pageIndicatorNormalColor,
-                            borderRadius: BorderRadius.circular(size(2))),
+                            borderRadius: BorderRadius.circular(sizeW(2))),
                       );
                     },
                   ),

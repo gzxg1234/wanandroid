@@ -1,9 +1,9 @@
 ///首页tab显示刷新图标
-class MainTabRefreshEvent {
+class MainTabShowRefreshEvent {
   final int index;
   final bool show;
 
-  MainTabRefreshEvent(this.index, this.show);
+  MainTabShowRefreshEvent(this.index, this.show);
 }
 
 ///首页tab重复按下事件

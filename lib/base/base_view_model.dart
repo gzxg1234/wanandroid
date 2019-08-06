@@ -3,44 +3,50 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wanandroid/base/view_model.dart';
+import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/data/repo.dart';
 import 'package:wanandroid/util/utils.dart';
 
-class BaseViewModel extends ViewModel {
+class BaseViewModel extends ChangeNotifier {
   @protected
   ApiClient repo;
   final CancelToken _cancelToken = CancelToken();
 
-  StreamController<String> _streamController = StreamController.broadcast();
+  // ignore: close_sinks
+  final StreamController<String> _streamController =
+      StreamController.broadcast();
+
+  final List<Function> _invokeOnDispose = [];
 
   Stream<String> get toast => _streamController.stream;
 
   BaseViewModel() {
     repo = ApiClient(_cancelToken);
+    _invokeOnDispose.add(_streamController.close);
   }
 
-  @override
-  void onInit() {
-    super.onInit();
+  void initial() {
     dLog(this.runtimeType.toString(), "onInit");
   }
 
-  void toastMsg(String msg) {
-    //放到微任务队列里，确保widget能全部接受到
-    Future.microtask(() {
-      if (!_streamController.isClosed) {
-        _streamController.sink.add(msg);
-      }
-    });
+  @mustCallSuper
+  void dispose() {
+    dLog(this.runtimeType.toString(), "onDispose");
+    _invokeOnDispose.forEach((e) => e());
+    _cancelToken.cancel("dispose");
+    super.dispose();
   }
 
-  @mustCallSuper
-  void onDispose() {
-    dLog(this.runtimeType.toString(), "onDispose");
-    _streamController.close();
-    _cancelToken.cancel("dispose");
-    super.onDispose();
+  void onEvent<E>(void onData(E event)) {
+    invokeOnDispose(EventBus.on<E>().listen(onData).cancel);
+  }
+
+  void toastMsg(String msg) {
+    _streamController.sink.add(msg);
+  }
+
+  void invokeOnDispose(Function function) {
+    _invokeOnDispose.add(function);
   }
 
   void log(String msg) {

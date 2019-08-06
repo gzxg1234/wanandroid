@@ -70,7 +70,7 @@ class ProjectListState extends State<ProjectList>
       color: MyApp.getTheme(context).backgroundColor,
       child: CommonList<ArticleEntity>(
         key: _commonListKey,
-        padding: EdgeInsets.all(size(12)),
+        padding: EdgeInsets.all(sizeW(12)),
         scrollController: _scrollController,
         startPage: 1,
         dataProvider: (page) {
@@ -84,7 +84,7 @@ class ProjectListState extends State<ProjectList>
           });
         },
         separatorBuilder: (_, index) {
-          return SizedBox(height: size(8));
+          return SizedBox(height: sizeW(8));
         },
         widgetBuilder: (BuildContext context, item, int index) {
           return ProjectItem(item);

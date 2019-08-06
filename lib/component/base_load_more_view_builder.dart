@@ -7,18 +7,18 @@ LoadMoreViewBuilder createBaseLoadMoreViewBuilder() {
   return (context, state) {
     if (state == LoadMoreState.Error) {
       return Container(
-        constraints: BoxConstraints.expand(height: size(60)),
+        constraints: BoxConstraints.expand(height: sizeW(60)),
         child: Center(child: Text("加载失败，点击重新加载")),
       );
     }
     if (state == LoadMoreState.End) {
       return Container(
-        constraints: BoxConstraints.expand(height:size(60)),
+        constraints: BoxConstraints.expand(height:sizeW(60)),
         child: Center(child: Text("没有更多数据啦~")),
       );
     }
     return Container(
-      constraints: BoxConstraints.expand(height:size(60)),
+      constraints: BoxConstraints.expand(height:sizeW(60)),
       child: Center(child: RefreshProgressIndicator()),
     );
   };

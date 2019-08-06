@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/base/base_view_model.dart';
 import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_cat_entity.dart';
+import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/util/utils.dart';
 
 class CatTabState {
@@ -28,8 +30,8 @@ class CatVM extends BaseViewModel {
   ValueListenable<CatTabState> get childTabState => _childTabState;
 
   @override
-  void onInit() {
-    super.onInit();
+  void initial() {
+    super.initial();
     fetchCategoryData();
   }
 

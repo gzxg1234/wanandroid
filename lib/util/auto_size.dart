@@ -3,11 +3,13 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 
-int _designWidth;
-double _autoSizeRatio;
+//设计稿尺寸
+Size designSize;
+//尺寸缩放比例
+Size _sizeRatio;
 
-void autoSize(int designWidth) {
-  _designWidth = designWidth;
+void autoSize(double designWidth, double designHeight) {
+  designSize = Size(designWidth, designHeight);
   _calculateRatio();
   var _originOnMetricsChanged = window.onMetricsChanged;
   window.onMetricsChanged = () {
@@ -18,13 +20,23 @@ void autoSize(int designWidth) {
 
 void _calculateRatio() {
   var window = WidgetsBinding.instance.window;
-  double width = min(window.physicalSize.width, window.physicalSize.height);
-  _autoSizeRatio = width / window.devicePixelRatio / _designWidth;
-  print("autosize ratio ${_autoSizeRatio.toString()}");
+  _sizeRatio = Size(
+    min(window.physicalSize.height, window.physicalSize.width) /
+        window.devicePixelRatio /
+        designSize.width,
+    max(window.physicalSize.height, window.physicalSize.width) /
+        designSize.height,
+  );
+
+  print("autosize ratio ${_sizeRatio.toString()}");
 }
 
-double size(double px) {
-  return px * _autoSizeRatio;
+double sizeW(double px) {
+  return px * _sizeRatio.width;
+}
+
+double sizeH(double px) {
+  return px * _sizeRatio.height;
 }
 
 //修改ViewConfiguration的方法会影响第三方包，比如webview中页面大小异常

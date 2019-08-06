@@ -14,6 +14,7 @@ class LoadMoreListView extends StatefulWidget {
   final bool hasMore;
   final ScrollPhysics physics;
   final ScrollController scrollController;
+  final Widget emptyView;
 
   const LoadMoreListView(
       {Key key,
@@ -24,6 +25,7 @@ class LoadMoreListView extends StatefulWidget {
       this.loadMoreCallback,
       this.hasMore = true,
       this.padding,
+      this.emptyView,
       this.separatorBuilder,
       this.physics})
       : super(key: key);
@@ -108,34 +110,40 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     bool enableLoadMore = widget.loadMoreCallback != null;
-    return ListView.separated(
-      controller: _scrollController,
-      physics: widget.physics,
-      separatorBuilder:
-          widget.separatorBuilder ?? (context, index) => Offstage(),
-      padding: widget.padding,
-      itemCount: enableLoadMore ? widget.itemCount + 1 : widget.itemCount,
-      itemBuilder: (context, index) {
-        if (enableLoadMore) {
-          if (index == widget.itemCount) {
-            if (state == LoadMoreState.Error) {
-              return GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () {
-                    setState(() {
-                      state = LoadMoreState.Normal;
-                      _loadMore();
-                    });
-                  },
-                  child: widget.loadMoreViewBuilder(context, state));
-            }
-            return widget.loadMoreViewBuilder(context, state);
-          }
-        }
-        return widget.itemBuilder(context, index);
-      },
-    );
+    return (widget.itemCount == 0 && widget.emptyView != null)
+        ? CustomScrollView(
+            physics: widget.physics,
+            slivers: <Widget>[
+                SliverFillViewport(
+                    delegate: SliverChildListDelegate([widget.emptyView]))
+              ])
+        : ListView.separated(
+            controller: _scrollController,
+            physics: widget.physics,
+            separatorBuilder:
+                widget.separatorBuilder ?? (context, index) => Offstage(),
+            padding: widget.padding,
+            itemCount: enableLoadMore ? widget.itemCount + 1 : widget.itemCount,
+            itemBuilder: (context, index) {
+              if (enableLoadMore) {
+                if (index == widget.itemCount) {
+                  if (state == LoadMoreState.Error) {
+                    return GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () {
+                          setState(() {
+                            state = LoadMoreState.Normal;
+                            _loadMore();
+                          });
+                        },
+                        child: widget.loadMoreViewBuilder(context, state));
+                  }
+                  return widget.loadMoreViewBuilder(context, state);
+                }
+              }
+              return widget.itemBuilder(context, index);
+            },
+          );
   }
 }

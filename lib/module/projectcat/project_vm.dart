@@ -27,8 +27,8 @@ class ProjectVM extends BaseViewModel {
   ValueListenable<ProjectTabState> get tabState => _tabState;
 
   @override
-  void onInit() {
-    super.onInit();
+  void initial() {
+    super.initial();
     fetchCategoryData();
   }
 

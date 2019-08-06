@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:wanandroid/config/config.dart';
 
 import '../entity_factory.dart';
 import 'bean/bean.dart';
@@ -13,11 +12,12 @@ class ApiException implements Exception {
 class ApiClient {
   static Dio ___dio;
 
-  static const LOG_ENABLE = false;
+  static const LOG_ENABLE = true;
 
   static Dio get _dio {
     if (___dio == null) {
       ___dio = Dio(BaseOptions(
+          receiveDataWhenStatusError: false,
           baseUrl: "https://www.wanandroid.com",
           method: "get",
           connectTimeout: 15000,
@@ -38,7 +38,7 @@ class ApiClient {
 
   ApiClient([this._cancelToken]);
 
-  void dispose(){
+  void dispose() {
     _cancelToken?.cancel("cancel");
   }
 
@@ -60,77 +60,92 @@ class ApiClient {
   ///
   /// 项目分类数据
   ///
-  Future<List<CategoryEntity>> getProjectCategoryList() {
-    return _getAndExactListData<CategoryEntity>("/project/tree/json");
+  Future<List<CategoryEntity>> getProjectCategoryList() async {
+    Response response = await _dio.get("/project/tree/json");
+    return transferList<CategoryEntity>(response);
   }
 
   ///
   /// 最新项目
   ///
   Future<PageData<ArticleEntity>> getNewsProjectList(int page) async {
-    return _getAndExactPageData<ArticleEntity>(
-        "/article/listproject/$page/json");
+    Response response = await _dio.get("/article/listproject/$page/json",
+        cancelToken: _cancelToken);
+    return transferPageData<ArticleEntity>(response);
   }
 
   ///
   /// 项目列表
   ///
   Future<PageData<ArticleEntity>> getProjectList(int page, [int cid]) async {
-    return _getAndExactPageData<ArticleEntity>("/project/list/$page/json",
+    Response response = await _dio.get("/project/list/$page/json",
         queryParameters: cid == null ? {} : {"cid": cid});
+    return transferPageData<ArticleEntity>(response);
   }
 
   ///
   /// 文章体系分类数据
   ///
-  Future<List<CategoryEntity>> getArticleCategoryList() {
-    return _getAndExactListData<CategoryEntity>("/tree/json");
+  Future<List<CategoryEntity>> getArticleCategoryList() async {
+    Response response = await _dio.get("/tree/json");
+    return transferList<CategoryEntity>(response);
   }
 
   ///
   /// 置顶文章
   ///
   Future<List<ArticleEntity>> _getTopArticleList() async {
-    return _getAndExactListData<ArticleEntity>("/article/top/json");
+    Response response = await _dio.get("/article/top/json");
+    return transferList<ArticleEntity>(response);
   }
 
   ///
   /// 文章列表
   ///
   Future<PageData<ArticleEntity>> getArticleList(int page, [int cid]) async {
-    return _getAndExactPageData<ArticleEntity>("/article/list/$page/json",
+    Response response = await _dio.get("/article/list/$page/json",
         queryParameters: cid == null ? {} : {"cid": cid});
+    return transferPageData<ArticleEntity>(response);
   }
 
-  Future<List<BannerEntity>> _getBanner() async {
-    return _getAndExactListData<BannerEntity>("/banner/json");
-  }
-
-  Future<List<HotWordEntity>> getHotWord([CancelToken cancelToken]) async {
-    return _getAndExactListData<HotWordEntity>("/hotkey/json");
-  }
-
-  Future<List<T>> _getAndExactListData<T>(String url,
-      {Map<String, dynamic> queryParameters}) async {
-    List list = await _getAndExactData(url, queryParameters: queryParameters);
-    return list.map((e) => EntityFactory.generateOBJ<T>(e)).toList();
-  }
-
-  Future<PageData<T>> _getAndExactPageData<T>(String url,
-      {Map<String, dynamic> queryParameters}) async {
-    dynamic dataJson =
-        await _getAndExactData(url, queryParameters: queryParameters);
-    return PageData<T>.fromJson(dataJson);
-  }
-
-  Future<dynamic> _getAndExactData(String url,
-      {Map<String, dynamic> queryParameters}) async {
-    Response response = await _dio.get(url,
-        cancelToken: _cancelToken, queryParameters: queryParameters);
-    RespEntity repoEntity = RespEntity.fromJson(response.data);
-    if (repoEntity.errorCode == 0) {
-      return repoEntity.data;
+  ///
+  /// 文章列表
+  ///
+  Future<PageData<ArticleEntity>> search(String word, int page) async {
+    print('$word,$page');
+    Response response =
+    await _dio.post(
+        "/article/query/$page/json", data: FormData.from({'k':'$word'}));
+    return transferPageData<ArticleEntity>(response);
     }
-    throw ApiException(repoEntity.errorMsg);
+
+    Future<List<BannerEntity>> _getBanner() async {
+    Response response = await _dio.get("/banner/json");
+    return transferList<BannerEntity>(response);
+    }
+
+        ///搜索热词
+        Future<List<HotWordEntity>> getHotWord()
+    async {
+      Response response = await _dio.get("/hotkey/json");
+      return transferList<HotWordEntity>(response);
+    }
+
+    List<T> transferList<T>(Response response) {
+      List list = exactData(response);
+      return list.map((e) => EntityFactory.generateOBJ<T>(e)).toList();
+    }
+
+    PageData<T> transferPageData<T>(Response response) {
+      dynamic jsonData = exactData(response);
+      return PageData<T>.fromJson(jsonData);
+    }
+
+    dynamic exactData(Response response) {
+      RespEntity repoEntity = RespEntity.fromJson(response.data);
+      if (repoEntity.errorCode == 0) {
+        return repoEntity.data;
+      }
+      throw ApiException(repoEntity.errorMsg);
+    }
   }
-}

@@ -65,11 +65,15 @@ class _State extends State<CommonButton> {
       border = widget.pressedShapeBorder;
     }
 
+    final ButtonThemeData buttonTheme = ButtonTheme.of(context);
     return Container(
         constraints: widget.constraints,
         margin: widget.margin,
         child: ButtonTheme.fromButtonThemeData(
-            data: ButtonTheme.of(context).copyWith(minWidth: 0, height: 0),
+            data: buttonTheme.copyWith(
+                minWidth: 0,
+                height: 0,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
             child: () {
               if (!widget.raise) {
                 return FlatButton(
@@ -84,7 +88,7 @@ class _State extends State<CommonButton> {
                         _pressed = b;
                       });
                     },
-                    padding: widget.padding,
+                    padding: widget.padding ?? buttonTheme.padding,
                     onPressed: widget.enable ? _handleOnPressed : null,
                     splashColor: widget.splashColor,
                     child: Text(widget.text, style: textStyle));
@@ -101,7 +105,7 @@ class _State extends State<CommonButton> {
                         _pressed = b;
                       });
                     },
-                    padding: widget.padding,
+                    padding: widget.padding ?? buttonTheme.padding,
                     onPressed: widget.enable ? _handleOnPressed : null,
                     splashColor: widget.splashColor,
                     child: Text(widget.text, style: textStyle));

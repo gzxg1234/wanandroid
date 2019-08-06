@@ -39,14 +39,14 @@ class MoreTabWindow extends PopupWindow<int>{
                           child: SlideTransition(
                             position: animate,
                             child: Container(
-                              padding: EdgeInsets.all(size(16)),
+                              padding: EdgeInsets.all(sizeW(16)),
                               constraints: BoxConstraints.tightFor(
                                   width: double.infinity),
                               color: Colors.white,
                               child: SingleChildScrollView(
                                 child: Wrap(
-                                    runSpacing: size(8),
-                                    spacing: size(8),
+                                    runSpacing: sizeW(8),
+                                    spacing: sizeW(8),
                                     children: () {
                                       return buildCatFlowChildren(
                                           context, window, tabs, checkedIndex);
@@ -69,11 +69,11 @@ class MoreTabWindow extends PopupWindow<int>{
       String item = tabs[i];
       bool checked = i == checkedIndex;
       var normalTextStyle = TextStyle(
-          color: MyApp.getTheme(context).textColorPrimary, fontSize: size(12));
+          color: MyApp.getTheme(context).textColorPrimary, fontSize: sizeW(12));
 
       var checkedTextStyle = TextStyle(
           color: MyApp.getTheme(context).textColorPrimaryInverse,
-          fontSize: size(12));
+          fontSize: sizeW(12));
 
       var checkedWidgetBgColor = MyApp.getTheme(context).checkedWidgetBgColor;
 
@@ -86,13 +86,13 @@ class MoreTabWindow extends PopupWindow<int>{
         onPressed: () {
           popupWindow.dismiss(i);
         },
-        constraints: BoxConstraints.tightFor(height: size(30)),
+        constraints: BoxConstraints.tightFor(height: sizeW(30)),
         textStyle: checked ? checkedTextStyle : normalTextStyle,
         pressedTextStyle: checkedTextStyle,
         bgColor: checked ? checkedWidgetBgColor : unCheckedWidgetBgColor,
         pressedBgColor: checkedWidgetBgColor,
         shapeBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(size(15))),
+            borderRadius: BorderRadius.circular(sizeW(15))),
       ));
     }
     return children;

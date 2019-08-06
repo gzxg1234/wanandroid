@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wanandroid/app/event_bus.dart';
+import 'package:wanandroid/base/base_state.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
 import 'package:wanandroid/component/more_tab_window.dart';
 import 'package:wanandroid/component/multi_state_widget.dart';
@@ -29,7 +29,10 @@ class ProjectPage extends StatefulWidget {
 }
 
 class _State extends State<ProjectPage>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+    with
+        AutomaticKeepAliveClientMixin,
+        TickerProviderStateMixin,
+        BaseStateMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -45,15 +48,12 @@ class _State extends State<ProjectPage>
   bool _tabChangeFromPage = false;
   MoreTabWindow _moreTabWindow;
 
-  StreamSubscription<MainTabReTapEvent> eventSubscription;
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _tabController = TabController(vsync: this, length: 0);
     _pageController = PageController();
-    eventSubscription = EventBus.on<MainTabReTapEvent>().listen((e) {
+    onEvent<MainTabReTapEvent>((e) {
       if (e.index == 2) {
         handleMainTabRepeatTap();
       }
@@ -62,7 +62,6 @@ class _State extends State<ProjectPage>
 
   @override
   void dispose() {
-    eventSubscription?.cancel();
     _tabController?.dispose();
     _pageController?.dispose();
     super.dispose();
@@ -70,7 +69,10 @@ class _State extends State<ProjectPage>
 
   void handleMainTabRepeatTap() {
     if (_bloc.state.value == StateValue.Success) {
-      _refreshIndicatorKey.currentState.show();
+      EventBus.send(MainTabShowRefreshEvent(2, true));
+      _refreshIndicatorKey.currentState.show().whenComplete(() {
+        EventBus.send(MainTabShowRefreshEvent(2, false));
+      });
     }
   }
 
@@ -140,15 +142,15 @@ class _State extends State<ProjectPage>
                                             MyApp.getTheme(context)
                                                 .tabBarUnSelectedColor,
                                         labelStyle:
-                                            TextStyle(fontSize: size(14)),
+                                            TextStyle(fontSize: sizeW(14)),
                                         tabs: () {
                                           return tabState.list
                                               .map((e) => Tab(
                                                     text: e.name,
                                                   ))
                                               .toList();
-                                        }(),
-                                      ),
+                                        }()
+                                      )
                                     ),
                                     Material(
                                       color: Colors.transparent,

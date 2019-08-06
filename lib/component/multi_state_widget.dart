@@ -1,9 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:wanandroid/util/auto_size.dart';
+import 'package:wanandroid/widget/progress_view.dart';
 
+import '../main.dart';
 import '../r.dart';
 
 enum StateValue {
@@ -31,38 +31,7 @@ class MultiStateWidget extends StatelessWidget {
   }
 }
 
-class _Loading extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    // TODO: implement createState
-    return _LoadingState();
-  }
-}
-
-class _LoadingState extends State<_Loading>
-    with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation<double> _animation;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 800));
-    _animation = Tween(begin: 0.0, end: 2 * pi).animate(_controller)
-      ..addListener(() {
-        setState(() {});
-      });
-    _controller.repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _Loading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -73,19 +42,20 @@ class _LoadingState extends State<_Loading>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Transform.rotate(
-              angle: _animation.value.toDouble(),
-              child: Image.asset(R.assetsImgIcLoading,
-                  color: Theme.of(context).primaryColor,
-                  width: size(40),
-                  height: size(40),
-                  fit: BoxFit.fitWidth)),
+          ProgressView(
+            duration: Duration(milliseconds: 800),
+            child: Image.asset(R.assetsImgIcLoading,
+                color: Theme.of(context).primaryColor,
+                width: sizeW(40),
+                height: sizeW(40),
+                fit: BoxFit.fitWidth),
+          ),
           Container(
-            margin: EdgeInsets.only(top: size(16)),
+            margin: EdgeInsets.only(top: sizeW(16)),
             child: Text(
               "努力加载中...",
               style: TextStyle(
-                  color: Theme.of(context).primaryColor, fontSize: size(14)),
+                  color: Theme.of(context).primaryColor, fontSize: sizeW(14)),
             ),
           )
         ],
@@ -114,18 +84,22 @@ class _Error extends StatelessWidget {
           children: <Widget>[
             Image.asset(
               R.assetsImgIcFailed,
-              color: Color(0xff333333),
-              width: size(80),
-              height: size(80),
+              color: MyApp.getTheme(context).textColorSecondary,
+              width: sizeW(80),
+              fit: BoxFit.fitWidth,
             ),
             Container(
-              margin: EdgeInsets.only(top: size(16)),
+              margin: EdgeInsets.only(top: sizeW(16)),
               child: Text(
                 "加载失败~\n点击重新加载",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xff333333), fontSize: size(14)),
+                style: TextStyle(
+                    color: MyApp.getTheme(context).textColorSecondary,
+                    fontSize: sizeW(14)),
               ),
-            )
+            ),
+            //整体往上移动一丢丢
+            SizedBox(height: sizeW(50))
           ],
         ),
       ),

@@ -64,8 +64,8 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
                         offstage: !_loading,
                         child: Container(
                             color: Colors.green,
-                            height: size(2),
-                            width: size(100)))
+                            height: sizeW(2),
+                            width: sizeW(100)))
                   ])));
         }),
       ),
@@ -88,7 +88,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
           : Text(
               _title,
               style: TextStyle(
-                  fontSize: size(16),
+                  fontSize: sizeW(16),
                   color: MyApp.getTheme(context).textColorPrimaryInverse),
             ),
       actions: buildActions(context),
@@ -129,7 +129,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
                         "浏览器打开",
                         style: TextStyle(
                             color: MyApp.getTheme(context).textColorPrimary,
-                            fontSize: size(14)),
+                            fontSize: sizeW(14)),
                       )),
                 ]),
       ),
@@ -265,7 +265,7 @@ class _LoadingTextState extends State<LoadingText>
     return Text(
       text,
       style: TextStyle(
-          fontSize: size(16),
+          fontSize: sizeW(16),
           color: MyApp.getTheme(context).textColorPrimaryInverse),
     );
   }

@@ -24,6 +24,7 @@ class AppTheme {
   Color get textColorPrimary => Color(0xff212121);
 
   Color get textColorSecondary => Color(0xff666666);
+  Color get textColor3 => Color(0xff999999);
 
   Color get cardColor => Colors.white;
 
@@ -32,6 +33,8 @@ class AppTheme {
   Color get pageIndicatorNormalColor => Colors.grey[200];
 
   Color get flagTextColor => Colors.red;
+
+  Color get searchHighLight => Colors.red;
 
   Color get unCheckedWidgetBgColor => Colors.grey[200];
   Color get checkedWidgetBgColor => primaryColor;

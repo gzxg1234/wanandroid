@@ -4,7 +4,7 @@ import 'package:wanandroid/base/base_view_model.dart';
 import 'package:wanandroid/data/bean/bean.dart';
 import 'package:wanandroid/data/repo.dart';
 
-class HotWordBloc extends BaseViewModel {
+class HotWordVM extends BaseViewModel {
   ValueNotifier<List<HotWordEntity>> _hotWordList = ValueNotifier([]);
 
   ValueListenable<List<HotWordEntity>> get hotWordList => _hotWordList;

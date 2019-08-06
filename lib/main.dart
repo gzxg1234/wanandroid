@@ -8,17 +8,20 @@ import 'package:wanandroid/util/auto_size.dart';
 
 import 'app/app_bloc.dart';
 import 'app/hot_word_bloc.dart';
-import 'package:wanandroid/base/view_model_provider.dart';
+import 'base/base_view_model_provider.dart';
+import 'module/search/search_page.dart';
 
 void main() => runApp(MyApp());
 
 class Routes {
-  static const MAIN = "/main";
-
   static const SPLASH = "/";
+
+  static const MAIN = "/main";
 
   static const WEB = "/web";
   static const WEB_ARG_URL = "url";
+
+  static const SEARCH = "/search";
 }
 
 class MyApp extends StatelessWidget {
@@ -29,11 +32,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    autoSize(375);
-    return ViewModelProvider<AppBloc>(
+    autoSize(375, 667);
+    return BaseViewModelProvider<AppBloc>(
       viewModelBuilder: (_) => AppBloc(),
-      child: ViewModelProvider<HotWordBloc>(
-        viewModelBuilder: (_) => HotWordBloc(),
+      child: BaseViewModelProvider<HotWordVM>(
+        viewModelBuilder: (_) => HotWordVM(),
         child: Consumer<AppBloc>(
           builder: (_, bloc, __) {
             return MaterialApp(
@@ -48,20 +51,17 @@ class MyApp extends StatelessWidget {
                 Widget page;
                 switch (settings.name) {
                   case Routes.SPLASH:
-                    {
-                      page = SplashPage();
-                    }
+                    page = SplashPage();
                     break;
                   case Routes.MAIN:
-                    {
-                      page = MainPage();
-                    }
+                    page = MainPage();
                     break;
                   case Routes.WEB:
-                    {
-                      page = WebPage(
-                          (settings.arguments as Map)[Routes.WEB_ARG_URL]);
-                    }
+                    page = WebPage(
+                        (settings.arguments as Map)[Routes.WEB_ARG_URL]);
+                    break;
+                  case Routes.SEARCH:
+                    page = SearchPage();
                     break;
                 }
                 return MaterialPageRoute(
