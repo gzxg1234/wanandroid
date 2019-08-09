@@ -45,7 +45,7 @@ class _Loading extends StatelessWidget {
           ProgressView(
             duration: Duration(milliseconds: 800),
             child: Image.asset(R.assetsImgIcLoading,
-                color: Theme.of(context).primaryColor,
+                color: MyApp.getTheme(context).activeIconColor,
                 width: sizeW(40),
                 height: sizeW(40),
                 fit: BoxFit.fitWidth),
@@ -55,7 +55,7 @@ class _Loading extends StatelessWidget {
             child: Text(
               "努力加载中...",
               style: TextStyle(
-                  color: Theme.of(context).primaryColor, fontSize: sizeW(14)),
+                  color: MyApp.getTheme(context).activeIconColor, fontSize: sizeW(14)),
             ),
           )
         ],
@@ -84,7 +84,7 @@ class _Error extends StatelessWidget {
           children: <Widget>[
             Image.asset(
               R.assetsImgIcFailed,
-              color: MyApp.getTheme(context).textColorSecondary,
+              color: MyApp.getTheme(context).activeIconColor,
               width: sizeW(80),
               fit: BoxFit.fitWidth,
             ),
@@ -94,7 +94,7 @@ class _Error extends StatelessWidget {
                 "加载失败~\n点击重新加载",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: MyApp.getTheme(context).textColorSecondary,
+                    color: MyApp.getTheme(context).activeIconColor,
                     fontSize: sizeW(14)),
               ),
             ),

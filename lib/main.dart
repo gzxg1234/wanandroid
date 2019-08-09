@@ -33,56 +33,55 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     autoSize(375, 667);
-    return BaseViewModelProvider<AppBloc>(
+    return BaseBlocProvider<AppBloc>(
       viewModelBuilder: (_) => AppBloc(),
-      child: BaseViewModelProvider<HotWordVM>(
-        viewModelBuilder: (_) => HotWordVM(),
+      child: BaseBlocProvider<HotWordBloc>(
+        viewModelBuilder: (_) => HotWordBloc(),
         child: Consumer<AppBloc>(
-          builder: (_, bloc, __) {
+          builder: (_, vm, __) {
             return MaterialApp(
-              title: '玩Android',
-              builder: (context, widget) {
-                return MediaQuery(
-                  data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-                  child: widget,
-                );
-              },
-              onGenerateRoute: (settings) {
-                Widget page;
-                switch (settings.name) {
-                  case Routes.SPLASH:
-                    page = SplashPage();
-                    break;
-                  case Routes.MAIN:
-                    page = MainPage();
-                    break;
-                  case Routes.WEB:
-                    page = WebPage(
-                        (settings.arguments as Map)[Routes.WEB_ARG_URL]);
-                    break;
-                  case Routes.SEARCH:
-                    page = SearchPage();
-                    break;
-                }
-                return MaterialPageRoute(
-                    builder: (context) => page, settings: settings);
-              },
-              theme: ThemeData(
-                  // This is the theme of your application.
-                  //
-                  // Try running your application with "flutter run". You'll see the
-                  // application has a blue toolbar. Then, without quitting the app, try
-                  // changing the primarySwatch below to Colors.green and then invoke
-                  // "hot reload" (press "r" in the console where you ran "flutter run",
-                  // or simply save your changes to "hot reload" in a Flutter IDE).
-                  // Notice that the counter didn't reset back to zero; the application
-                  // is not restarted.
-                  primaryColor: bloc.theme.primaryColor),
-//            routes: {
-//              RouteNames.SPLASH: (context) => SplashPage(),
-//              RouteNames.MAIN: (context) => MainPage(),
-//            },
-            );
+                title: '玩Android',
+                builder: (context, widget) {
+                  return MediaQuery(
+                    data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                    child: widget,
+                  );
+                },
+                onGenerateRoute: (settings) {
+                  Widget page;
+                  switch (settings.name) {
+                    case Routes.SPLASH:
+                      page = SplashPage();
+                      break;
+                    case Routes.MAIN:
+                      page = MainPage();
+                      break;
+                    case Routes.WEB:
+                      page = WebPage(
+                          (settings.arguments as Map)[Routes.WEB_ARG_URL]);
+                      break;
+                    case Routes.SEARCH:
+                      page = SearchPage();
+                      break;
+                  }
+                  return MaterialPageRoute(
+                      builder: (context) => page, settings: settings);
+                },
+                theme: ThemeData(
+                    // This is the theme of your application.
+                    //
+                    // Try running your application with "flutter run". You'll see the
+                    // application has a blue toolbar. Then, without quitting the app, try
+                    // changing the primarySwatch below to Colors.green and then invoke
+                    // "hot reload" (press "r" in the console where you ran "flutter run",
+                    // or simply save your changes to "hot reload" in a Flutter IDE).
+                    // Notice that the counter didn't reset back to zero; the application
+                    // is not restarted.
+                    accentColor: vm.theme.accentColor,
+                    canvasColor: vm.theme.canvasColor,
+                    scaffoldBackgroundColor: vm.theme.backgroundColor,
+                    backgroundColor: vm.theme.backgroundColor,
+                    primaryColor: vm.theme.primaryColor));
           },
         ),
       ),

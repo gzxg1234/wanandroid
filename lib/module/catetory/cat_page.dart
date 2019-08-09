@@ -6,17 +6,22 @@ import 'package:provider/provider.dart';
 import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/base/base_state.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
+import 'package:wanandroid/component/common_list.dart';
+import 'package:wanandroid/component/item_article.dart';
 import 'package:wanandroid/component/more_tab_window.dart';
 import 'package:wanandroid/component/multi_state_widget.dart';
+import 'package:wanandroid/component/tab_pager.dart';
 import 'package:wanandroid/data/bean/article_cat_entity.dart';
+import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/util/auto_size.dart';
+import 'package:wanandroid/util/widget_utils.dart';
+import 'package:wanandroid/widget/keep_alive.dart';
 import 'package:wanandroid/widget/refresh_indicator_fix.dart';
 import 'package:wanandroid/widget/rotation_view.dart';
 
 import '../../main.dart';
-import 'article_list.dart';
-import 'cat_vm.dart';
+import 'cat_bloc.dart';
 
 class CatPage extends StatefulWidget {
   CatPage({Key key}) : super(key: key);
@@ -36,15 +41,9 @@ class CatPageState extends State<CatPage>
   @override
   bool get wantKeepAlive => true;
 
-  CatVM _catBloc;
-
-  bool _tabChangeFromPage = false;
+  CatBloc _bloc;
 
   TabController _tabController;
-
-  TabController _subTabController;
-
-  PageController _pageController;
 
   MoreTabWindow _moreTabWindow;
 
@@ -54,13 +53,48 @@ class CatPageState extends State<CatPage>
 
   GlobalKey<RotationViewState> _dropDownButtonKey = GlobalKey();
 
+  GlobalObjectKey<TabPagerState> _tabPagerKey;
+
+  List<GlobalKey<CommonListState>> pageKeys;
+
+  List<ScrollController> pageScrollControllers;
+
   @override
   void initState() {
     super.initState();
+    _bloc = CatBloc();
     onEvent<MainTabReTapEvent>((e) {
       if (e.index == 1) {
         handleMainTabRepeatTap();
       }
+    });
+    _bloc.childTabList.addListener(() {
+      _tabPagerKey = GlobalObjectKey(_bloc.childTabList.value);
+      pageKeys = List.generate(_bloc.childTabList.value.length,
+          (i) => GlobalObjectKey(_bloc.childTabList.value[i]));
+      pageScrollControllers = List.generate(
+          _bloc.childTabList.value.length, (i) => ScrollController());
+    });
+
+    _bloc.childTabIndex.addListener(() {
+      try {
+        _tabPagerKey?.currentState?.jumpTo(_bloc.childTabIndex.value);
+      } catch (e) {}
+    });
+
+    _bloc.parentTabList.addListener(() {
+      _tabController?.dispose();
+      _tabController = TabController(
+          length: _bloc.parentTabList.value.length,
+          vsync: this,
+          initialIndex: _bloc.parentTabIndex.value);
+      _tabController.addListener(() {
+        _bloc.parentIndexChange(_tabController.index);
+      });
+    });
+
+    _bloc.parentTabIndex.addListener(() {
+      _tabController.index = _bloc.parentTabIndex.value;
     });
   }
 
@@ -68,15 +102,14 @@ class CatPageState extends State<CatPage>
   void dispose() {
     _moreTabWindow?.dismiss();
     _tabController?.dispose();
-    _subTabController?.dispose();
     super.dispose();
   }
 
   void handleMainTabRepeatTap() {
-    if (_catBloc.state.value == StateValue.Success) {
-      EventBus.send(MainTabShowRefreshEvent(1, true));
+    if (_bloc.state.value == StateValue.Success) {
+      EventBus.post(MainTabShowRefreshEvent(1, true));
       _refreshIndicatorKey.currentState.show().whenComplete(() {
-        EventBus.send(MainTabShowRefreshEvent(1, false));
+        EventBus.post(MainTabShowRefreshEvent(1, false));
       });
     }
   }
@@ -84,11 +117,11 @@ class CatPageState extends State<CatPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BaseViewModelProvider<CatVM>(
+    return BaseBlocProvider<CatBloc>(
       viewModelBuilder: (BuildContext context) {
-        return _catBloc = CatVM();
+        return _bloc;
       },
-      child: Consumer<CatVM>(
+      child: Consumer<CatBloc>(
         builder: (context, bloc, _) {
           return ValueListenableBuilder<StateValue>(
             valueListenable: bloc.state,
@@ -102,17 +135,9 @@ class CatPageState extends State<CatPage>
                     onRefresh: () => bloc.fetchCategoryData(false),
                     child: Column(
                       children: <Widget>[
-                        ValueListenableBuilder<CatTabState>(
-                          valueListenable: bloc.parentTabState,
-                          builder: (context, tabState, _) {
-                            _tabController?.dispose();
-                            _tabController = TabController(
-                                length: tabState.list.length,
-                                vsync: this,
-                                initialIndex: tabState.index);
-                            _tabController.addListener(() {
-                              bloc.parentIndexChange(_tabController.index);
-                            });
+                        ValueListenableBuilder<List<CategoryEntity>>(
+                          valueListenable: bloc.parentTabList,
+                          builder: (context, list, _) {
                             return Container(
                               color: MyApp.getTheme(context).primaryColor,
                               child: SafeArea(
@@ -124,6 +149,8 @@ class CatPageState extends State<CatPage>
                                         isScrollable: true,
                                         //是否可以滚动
                                         controller: _tabController,
+                                        indicatorColor: MyApp.getTheme(context)
+                                            .tabBarSelectedColor,
                                         labelColor: MyApp.getTheme(context)
                                             .tabBarSelectedColor,
                                         unselectedLabelColor:
@@ -132,7 +159,7 @@ class CatPageState extends State<CatPage>
                                         labelStyle:
                                             TextStyle(fontSize: sizeW(14)),
                                         tabs: () {
-                                          return tabState.list
+                                          return list
                                               .map((e) => Tab(
                                                     text: e.name,
                                                   ))
@@ -151,7 +178,7 @@ class CatPageState extends State<CatPage>
                                           onTap: () {
                                             _dropDownButtonKey.currentState
                                                 ?.forward();
-                                            _showMoreCat(tabState.list);
+                                            _showMoreCat(list);
                                           },
                                           child: SizedBox(
                                             width: 46,
@@ -165,7 +192,7 @@ class CatPageState extends State<CatPage>
                                               child: Icon(
                                                 Icons.arrow_drop_down,
                                                 color: MyApp.getTheme(context)
-                                                    .iconColor,
+                                                    .appBarTextIconColor,
                                               ),
                                             ),
                                           ),
@@ -179,81 +206,47 @@ class CatPageState extends State<CatPage>
                           },
                         ),
                         Expanded(
-                          child: ValueListenableBuilder<CatTabState>(
-                            valueListenable: bloc.childTabState,
-                            builder: (context, tabState, _) {
-                              _subTabController = TabController(
-                                  length: tabState.list.length,
-                                  vsync: this,
-                                  initialIndex: tabState.index);
-                              _subTabController.addListener(() {
-                                bloc.childIndexChange(_subTabController.index);
-                                if (!_tabChangeFromPage) {
-                                  _pageController
-                                      .jumpToPage(_subTabController.index);
-                                } else {
-                                  _tabChangeFromPage = false;
-                                }
-                              });
-
-                              _pageController = PageController(
-                                  initialPage: tabState.index, keepPage: false);
-                              List<GlobalKey<dynamic>> pageKeys =
-                                  List.generate(tabState.list.length, (i) {
-                                return GlobalKey();
-                              });
-
-                              return Column(
-                                children: <Widget>[
-                                  Container(
-                                      color:
-                                          MyApp.getTheme(context).primaryColor,
-                                      width: double.infinity,
-                                      child: TabBar(
-                                          key: ObjectKey(tabState.list),
-                                          isScrollable: true,
-                                          onTap: (index) {
-                                            if (!_subTabController
-                                                .indexIsChanging) {
-                                              pageKeys[index]
-                                                  .currentState
-                                                  ?.onParentTabTap();
-                                            }
-                                          },
-                                          //是否可以滚动
-                                          controller: _subTabController,
-                                          labelColor: MyApp.getTheme(context)
-                                              .tabBarSelectedColor,
-                                          unselectedLabelColor:
-                                              MyApp.getTheme(context)
-                                                  .tabBarUnSelectedColor,
-                                          unselectedLabelStyle:
-                                              TextStyle(fontSize: sizeW(14)),
-                                          labelStyle:
-                                              TextStyle(fontSize: sizeW(14)),
-                                          tabs: () {
-                                            return tabState.list
-                                                .map((e) => Tab(
-                                                      text: e.name,
-                                                    ))
-                                                .toList();
-                                          }())),
-                                  Expanded(
-                                    child: PageView.builder(
-                                        key: ObjectKey(tabState.list),
-                                        itemCount: tabState.list.length,
-                                        controller: _pageController,
-                                        onPageChanged: (index) {
-                                          _tabChangeFromPage = true;
-                                          _subTabController?.index = index;
-                                        },
-                                        itemBuilder: (context, index) {
-                                          return ArticleList(
-                                              key: pageKeys[index],
-                                              cat: tabState.list[index]);
-                                        }),
-                                  ),
-                                ],
+                          child: ValueListenableBuilder<List<CategoryEntity>>(
+                            valueListenable: bloc.childTabList,
+                            child: Offstage(),
+                            builder: (context, tabList, empty) {
+                              if (tabList == null) {
+                                return empty;
+                              }
+                              return TabPager(
+                                initialIndex: bloc.childTabIndex.value,
+                                key: _tabPagerKey,
+                                tabs: tabList.map((e) => e.name).toList(),
+                                onTabReTap: (index) {
+                                  if (pageScrollControllers[index].offset ==
+                                      0) {
+                                    pageKeys[index].currentState?.refresh();
+                                  } else {
+                                    scrollToTop(pageScrollControllers[index]);
+                                  }
+                                },
+                                pageBuilder: (_, index) {
+                                  final int id = tabList[index].id;
+                                  return KeepAliveContainer(
+                                    child: CommonList<ArticleEntity>(
+                                      key: pageKeys[index],
+                                      padding: EdgeInsets.all(sizeW(12)),
+                                      scrollController:
+                                          pageScrollControllers[index],
+                                      startPage: 0,
+                                      dataProvider: (page) {
+                                        return bloc.fetchList(page, id);
+                                      },
+                                      separatorBuilder: (_, index) {
+                                        return SizedBox(height: sizeW(8));
+                                      },
+                                      itemBuilder: (BuildContext context, item,
+                                          int index) {
+                                        return ArticleItem(item);
+                                      },
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),

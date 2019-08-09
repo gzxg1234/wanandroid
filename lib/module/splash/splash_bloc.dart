@@ -1,15 +1,15 @@
 import 'dart:ui';
 
-import 'package:wanandroid/base/base_view_model.dart';
+import 'package:wanandroid/base/base_bloc.dart';
 
-class SplashVM extends BaseViewModel {
+
+class SplashBloc extends BaseBloc {
   final VoidCallback toMain;
 
-  SplashVM({this.toMain});
+  SplashBloc({this.toMain});
 
   @override
   void initial() {
-    // TODO: implement onInit
     super.initial();
     Future.delayed(Duration(seconds: 1), () {
       toMain?.call();

@@ -42,7 +42,7 @@ class MoreTabWindow extends PopupWindow<int>{
                               padding: EdgeInsets.all(sizeW(16)),
                               constraints: BoxConstraints.tightFor(
                                   width: double.infinity),
-                              color: Colors.white,
+                              color: MyApp.getTheme(context).backgroundColor,
                               child: SingleChildScrollView(
                                 child: Wrap(
                                     runSpacing: sizeW(8),
@@ -75,10 +75,10 @@ class MoreTabWindow extends PopupWindow<int>{
           color: MyApp.getTheme(context).textColorPrimaryInverse,
           fontSize: sizeW(12));
 
-      var checkedWidgetBgColor = MyApp.getTheme(context).checkedWidgetBgColor;
+      var checkedWidgetBgColor = MyApp.getTheme(context).tagBgColorChecked;
 
       var unCheckedWidgetBgColor =
-          MyApp.getTheme(context).unCheckedWidgetBgColor;
+          MyApp.getTheme(context).tagBgColor;
 
       children.add(CommonButton(
         item,

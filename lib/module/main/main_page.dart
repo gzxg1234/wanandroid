@@ -11,11 +11,12 @@ import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/module/catetory/cat_page.dart';
 import 'package:wanandroid/module/home/home_page.dart';
 import 'package:wanandroid/module/projectcat/project_page.dart';
+import 'package:wanandroid/module/woa/wx_page.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/widget/progress_view.dart';
 
 import '../../r.dart';
-import 'main_vm.dart';
+import 'main_bloc.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -28,18 +29,25 @@ class MainPage extends StatefulWidget {
 class _State extends State<MainPage> with BaseStateMixin {
   final PageController pageController = PageController(initialPage: 0);
 
+  MainBloc _bloc;
+
   @override
   void initState() {
     super.initState();
+    _bloc = MainBloc();
+    onEvent<SwitchHomeTabEvent>((e){
+      _bloc.setCurrentTab(e.index);
+      pageController.jumpToPage(e.index);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BaseViewModelProvider<MainVM>(
+    return BaseBlocProvider<MainBloc>(
       viewModelBuilder: (_) {
-        return MainVM();
+        return _bloc;
       },
-      child: Consumer<MainVM>(builder: (context, bloc, _) {
+      child: Consumer<MainBloc>(builder: (context, bloc, _) {
         return Scaffold(
           backgroundColor: Provider.of<AppBloc>(context).theme.backgroundColor,
           body: PageView.builder(
@@ -53,7 +61,7 @@ class _State extends State<MainPage> with BaseStateMixin {
               } else if (index == 2) {
                 return ProjectPage();
               }
-              return Container();
+              return WxPage();
             },
           ),
           bottomNavigationBar: MultiValueListenableBuilder(
@@ -68,7 +76,7 @@ class _State extends State<MainPage> with BaseStateMixin {
                 return BottomNavigationBar(
                     onTap: (index) {
                       if (index == values[0]) {
-                        EventBus.send(MainTabReTapEvent(index));
+                        EventBus.post(MainTabReTapEvent(index));
                       }
                       bloc.setCurrentTab(index);
                       pageController.jumpToPage(index);

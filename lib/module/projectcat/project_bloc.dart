@@ -1,30 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wanandroid/base/base_view_model.dart';
+import 'package:wanandroid/base/base_bloc.dart';
 import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_cat_entity.dart';
+import 'package:wanandroid/data/repo.dart';
 import 'package:wanandroid/util/utils.dart';
 
-class ProjectTabState {
-  List<CategoryEntity> list;
-  int index;
-
-  ProjectTabState([this.list, this.index]);
-
-  ProjectTabState clone() {
-    return ProjectTabState(this.list, this.index);
-  }
-}
-
-class ProjectVM extends BaseViewModel {
+class ProjectBloc extends BaseBloc {
   ValueNotifier<StateValue> _state = ValueNotifier(StateValue.Loading);
 
   ValueListenable<StateValue> get state => _state;
 
-  ValueNotifier<ProjectTabState> _tabState =
-      ValueNotifier(ProjectTabState([], 0));
+  ValueNotifier<List<CategoryEntity>> _catList = ValueNotifier([]);
 
-  ValueListenable<ProjectTabState> get tabState => _tabState;
+  ValueListenable<List<CategoryEntity>> get catList => _catList;
 
   @override
   void initial() {
@@ -37,11 +26,9 @@ class ProjectVM extends BaseViewModel {
       _state.value = StateValue.Loading;
     }
     try {
-      var cats = await repo.getProjectCategoryList() ?? []
+      var cats = await ApiClient.getProjectCategoryList(cancelToken) ?? []
         ..insert(0, CategoryEntity(name: "最新", id: null));
-      _tabState.value = _tabState.value.clone()
-        ..list = cats
-        ..index = 0;
+      _catList.value = cats;
       if (init) {
         _state.value = StateValue.Success;
       }
@@ -51,9 +38,5 @@ class ProjectVM extends BaseViewModel {
         _state.value = StateValue.Error;
       }
     }
-  }
-
-  void indexChange(int index) {
-    _tabState.value.index = index;
   }
 }

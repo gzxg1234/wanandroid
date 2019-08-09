@@ -24,9 +24,10 @@ class PageBean<T> {
   PageBean(this.data, this.hasMore);
 }
 
+///通用列表加载
 class CommonList<T> extends StatefulWidget {
   final DataProvider<T> dataProvider;
-  final ItemBuilder widgetBuilder;
+  final ItemBuilder itemBuilder;
   final List<Widget> headers;
   final int startPage;
   final IndexedWidgetBuilder separatorBuilder;
@@ -36,7 +37,7 @@ class CommonList<T> extends StatefulWidget {
   CommonList(
       {Key key,
       @required this.dataProvider,
-      @required this.widgetBuilder,
+      @required this.itemBuilder,
       this.headers,
       this.startPage = 0,
       this.scrollController,
@@ -46,7 +47,6 @@ class CommonList<T> extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return CommonListState<T>();
   }
 }
@@ -116,7 +116,6 @@ class CommonListState<T> extends State<CommonList<T>> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _page = widget.startPage - 1;
     _initData();
@@ -124,7 +123,6 @@ class CommonListState<T> extends State<CommonList<T>> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return ValueListenableBuilder<StateValue>(
         valueListenable: _state,
         builder: (context, state, __) {
@@ -139,24 +137,30 @@ class CommonListState<T> extends State<CommonList<T>> {
                   child: MultiValueListenableBuilder(
                       valueListenableList: [_list, _hasMore],
                       builder: (context, values, _) {
-                        return LoadMoreListView(
-                          emptyView: Empty(),
-                          physics: AlwaysScrollableScrollPhysics(),
-                          padding: widget.padding,
-                          itemCount: values[0].length + headersLength,
-                          hasMore: values[1],
-                          scrollController: widget.scrollController,
-                          loadMoreCallback: loadMore,
-                          separatorBuilder: widget.separatorBuilder,
-                          itemBuilder: (context, index) {
-                            if (index < headersLength) {
-                              return widget.headers[index];
-                            }
-                            index -= headersLength;
-                            return widget.widgetBuilder(
-                                context, values[0][index], index);
-                          },
-                          loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
+                        return DecoratedBox(
+                          decoration: BoxDecoration(
+                              color:
+                                  MyApp.getTheme(context).listBackgroundColor),
+                          child: LoadMoreListView(
+                            emptyView: Empty(),
+                            physics: AlwaysScrollableScrollPhysics(),
+                            padding: widget.padding,
+                            itemCount: values[0].length + headersLength,
+                            hasMore: values[1],
+                            scrollController: widget.scrollController,
+                            loadMoreCallback: loadMore,
+                            separatorBuilder: widget.separatorBuilder,
+                            itemBuilder: (context, index) {
+                              if (index < headersLength) {
+                                return widget.headers[index];
+                              }
+                              index -= headersLength;
+                              return widget.itemBuilder(
+                                  context, values[0][index], index);
+                            },
+                            loadMoreViewBuilder:
+                                createBaseLoadMoreViewBuilder(),
+                          ),
                         );
                       }),
                 );

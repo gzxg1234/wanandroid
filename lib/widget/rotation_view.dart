@@ -21,7 +21,6 @@ class RotationView extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return RotationViewState();
   }
 }
@@ -32,7 +31,6 @@ class RotationViewState extends State<RotationView>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _animationController =
         AnimationController(vsync: this, duration: widget.duration);

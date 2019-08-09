@@ -13,7 +13,6 @@ class ProgressView extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return ProgressViewState();
   }
 }
@@ -25,7 +24,6 @@ class ProgressViewState extends State<ProgressView>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _animationController =
         AnimationController(vsync: this, duration: widget.duration);

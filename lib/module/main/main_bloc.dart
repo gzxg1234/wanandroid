@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wanandroid/base/base_view_model.dart';
+import 'package:wanandroid/base/base_bloc.dart';
 import 'package:wanandroid/event/events.dart';
 
-class MainVM extends BaseViewModel {
+class MainBloc extends BaseBloc {
   final ValueNotifier<int> _currentTab = ValueNotifier(0);
   final ValueNotifier<List<bool>> _tabRefreshState =
       ValueNotifier(List.filled(4, false));

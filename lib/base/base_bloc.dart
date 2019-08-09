@@ -4,13 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:wanandroid/app/event_bus.dart';
-import 'package:wanandroid/data/repo.dart';
 import 'package:wanandroid/util/utils.dart';
 
-class BaseViewModel extends ChangeNotifier {
+class BaseBloc extends ChangeNotifier {
   @protected
-  ApiClient repo;
-  final CancelToken _cancelToken = CancelToken();
+  final CancelToken cancelToken = CancelToken();
 
   // ignore: close_sinks
   final StreamController<String> _streamController =
@@ -20,8 +18,7 @@ class BaseViewModel extends ChangeNotifier {
 
   Stream<String> get toast => _streamController.stream;
 
-  BaseViewModel() {
-    repo = ApiClient(_cancelToken);
+  BaseBloc() {
     _invokeOnDispose.add(_streamController.close);
   }
 
@@ -32,13 +29,13 @@ class BaseViewModel extends ChangeNotifier {
   @mustCallSuper
   void dispose() {
     dLog(this.runtimeType.toString(), "onDispose");
+    cancelToken.cancel();
     _invokeOnDispose.forEach((e) => e());
-    _cancelToken.cancel("dispose");
     super.dispose();
   }
 
-  void onEvent<E>(void onData(E event)) {
-    invokeOnDispose(EventBus.on<E>().listen(onData).cancel);
+  void onEvent<E>(void onData(E event), [bool sticky = false]) {
+    invokeOnDispose(EventBus.on<E>(sticky).listen(onData).cancel);
   }
 
   void toastMsg(String msg) {

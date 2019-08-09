@@ -7,8 +7,22 @@ class MainTabShowRefreshEvent {
 }
 
 ///首页tab重复按下事件
-class MainTabReTapEvent{
+class MainTabReTapEvent {
   final int index;
 
   MainTabReTapEvent(this.index);
+}
+
+///切换首页tab
+class SwitchHomeTabEvent {
+  final int index;
+
+  SwitchHomeTabEvent(this.index);
+}
+
+///跳转指定分类页面
+class JumpCategoryEvent {
+  final int childCatId;
+
+  JumpCategoryEvent(this.childCatId);
 }

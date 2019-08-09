@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wanandroid/base/base_view_model.dart';
+import 'package:wanandroid/base/base_bloc.dart';
 import 'package:wanandroid/data/app_setting.dart';
 
-class SearchVM extends BaseViewModel {
+class SearchBloc extends BaseBloc {
   final ValueNotifier<String> _searchWord = ValueNotifier<String>("");
   final ValueNotifier<List<String>> _history = ValueNotifier<List<String>>([]);
 

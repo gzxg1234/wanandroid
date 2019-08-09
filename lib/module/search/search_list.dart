@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:wanandroid/base/base_state.dart';
 import 'package:wanandroid/component/common_list.dart';
 import 'package:wanandroid/component/item_article.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
@@ -19,11 +20,9 @@ class SearchList extends StatefulWidget {
 }
 
 class SearchListState extends State<SearchList>
-    with AutomaticKeepAliveClientMixin<SearchList> {
+    with AutomaticKeepAliveClientMixin<SearchList>,BaseStateMixin {
   @override
   bool get wantKeepAlive => true;
-
-  ApiClient _repo = ApiClient();
 
   ScrollController _scrollController = ScrollController();
 
@@ -33,7 +32,6 @@ class SearchListState extends State<SearchList>
   void initState() {
     super.initState();
     _commonListKey = GlobalObjectKey(widget.word);
-    _repo = ApiClient();
   }
 
   @override
@@ -42,12 +40,6 @@ class SearchListState extends State<SearchList>
       _commonListKey = GlobalObjectKey(widget.word);
     }
     super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    _repo.dispose();
-    super.dispose();
   }
 
   @override
@@ -61,15 +53,15 @@ class SearchListState extends State<SearchList>
         scrollController: _scrollController,
         startPage: 0,
         dataProvider: (page) {
-          return _repo.search(widget.word, page).then((e) {
+          return ApiClient.search(widget.word, page).then((e) {
             return PageBean(e.datas, !e.over);
           });
         },
         separatorBuilder: (_, index) {
           return SizedBox(height: sizeW(8));
         },
-        widgetBuilder: (BuildContext context, item, int index) {
-          return ArticleItem(item,parseTitle: true);
+        itemBuilder: (BuildContext context, item, int index) {
+          return ArticleItem(item);
         },
       ),
     );

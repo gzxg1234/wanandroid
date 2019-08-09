@@ -12,7 +12,6 @@ class ClearableTextField extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return _State();
   }
 }

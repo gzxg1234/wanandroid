@@ -5,11 +5,9 @@ import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:wanandroid/app/event_bus.dart';
 import 'package:wanandroid/base/base_view_model_provider.dart';
-import 'package:wanandroid/event/events.dart';
 import 'package:wanandroid/main.dart';
-import 'package:wanandroid/module/web/web_vm.dart';
+import 'package:wanandroid/module/web/web_bloc.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/util/utils.dart';
 import 'package:wanandroid/util/widget_utils.dart';
@@ -34,7 +32,6 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
 
@@ -52,9 +49,9 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
         }
         return Future.value(true);
       },
-      child: BaseViewModelProvider<WebVM>(
-        viewModelBuilder: (context) => WebVM(),
-        child: Consumer<WebVM>(builder: (context, bloc, _) {
+      child: BaseBlocProvider<WebBloc>(
+        viewModelBuilder: (context) => WebBloc(),
+        child: Consumer<WebBloc>(builder: (context, bloc, _) {
           return Material(
               child: Scaffold(
                   appBar: buildAppBar(context, bloc),
@@ -72,12 +69,12 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget buildAppBar(BuildContext context, WebVM bloc) {
+  Widget buildAppBar(BuildContext context, WebBloc bloc) {
     return AppBar(
       elevation: 4.0,
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
-        color: MyApp.getTheme(context).iconColor,
+        color: MyApp.getTheme(context).appBarTextIconColor,
         onPressed: () {
           Navigator.of(context).pop();
         },
@@ -89,7 +86,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
               _title,
               style: TextStyle(
                   fontSize: sizeW(16),
-                  color: MyApp.getTheme(context).textColorPrimaryInverse),
+                  color: MyApp.getTheme(context).appBarTextIconColor),
             ),
       actions: buildActions(context),
     );
@@ -101,7 +98,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
           offstage: _webViewController == null,
           child: IconButton(
             icon: Icon(Icons.refresh),
-            color: MyApp.getTheme(context).iconColor,
+            color: MyApp.getTheme(context).appBarTextIconColor,
             onPressed: () {
               setState(() {
                 _loading = true;
@@ -112,26 +109,31 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
           )),
       Offstage(
         offstage: _webViewController == null,
-        child: PopupMenuButton<MenuItem>(
-            tooltip: "更多",
-            offset: Offset(0, kToolbarHeight),
-            onSelected: (item) {
-              switch (item) {
-                case MenuItem.openInBrowser:
-                  _openInBrowser(context);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-                  PopupMenuItem<MenuItem>(
-                      value: MenuItem.openInBrowser,
-                      child: Text(
-                        "浏览器打开",
-                        style: TextStyle(
-                            color: MyApp.getTheme(context).textColorPrimary,
-                            fontSize: sizeW(14)),
-                      )),
-                ]),
+        child: Theme(
+          data: Theme.of(context).copyWith(cardColor:MyApp.getTheme(context).popMenuBgColor),
+          child: PopupMenuButton<MenuItem>(
+              tooltip: "更多",
+              icon:
+                  Icon(Icons.more_vert, color: MyApp.getTheme(context).appBarTextIconColor),
+              offset: Offset(0, kToolbarHeight),
+              onSelected: (item) {
+                switch (item) {
+                  case MenuItem.openInBrowser:
+                    _openInBrowser(context);
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                    PopupMenuItem<MenuItem>(
+                        value: MenuItem.openInBrowser,
+                        child: Text(
+                          "浏览器打开",
+                          style: TextStyle(
+                              color: MyApp.getTheme(context).textColorPrimary,
+                              fontSize: sizeW(14)),
+                        )),
+                  ]),
+        ),
       ),
     ];
   }
@@ -163,7 +165,7 @@ class _State extends State<WebPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  Widget buildWebView(BuildContext context, WebVM bloc) {
+  Widget buildWebView(BuildContext context, WebBloc bloc) {
     return Offstage(
         offstage: _webViewController == null,
         child: WebView(
@@ -237,7 +239,6 @@ class _LoadingTextState extends State<LoadingText>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _animationController = AnimationController(
         vsync: this, duration: Duration(milliseconds: 1200));
@@ -261,7 +262,6 @@ class _LoadingTextState extends State<LoadingText>
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Text(
       text,
       style: TextStyle(

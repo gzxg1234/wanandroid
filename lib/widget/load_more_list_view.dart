@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 typedef Widget LoadMoreViewBuilder(BuildContext context, LoadMoreState state);
 typedef Future<LoadMoreState> LoadMoreCallback();
@@ -55,9 +56,10 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
 
   ScrollController _scrollController;
 
+  GlobalKey _moreViewKey = GlobalKey();
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     state = widget.hasMore ? LoadMoreState.Normal : LoadMoreState.End;
     _setupScrollListener();
@@ -70,8 +72,9 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
 
   void _scrollChanged() {
     if (!loading &&
-        _scrollController.position.pixels ==
-            _scrollController.position.maxScrollExtent &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent -
+                (_moreViewKey.currentContext?.size?.height??0) &&
         state == LoadMoreState.Normal) {
       _loadMore();
     }
@@ -112,12 +115,10 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
   Widget build(BuildContext context) {
     bool enableLoadMore = widget.loadMoreCallback != null;
     return (widget.itemCount == 0 && widget.emptyView != null)
-        ? CustomScrollView(
-            physics: widget.physics,
-            slivers: <Widget>[
-                SliverFillViewport(
-                    delegate: SliverChildListDelegate([widget.emptyView]))
-              ])
+        ? CustomScrollView(physics: widget.physics, slivers: <Widget>[
+            SliverFillViewport(
+                delegate: SliverChildListDelegate([widget.emptyView]))
+          ])
         : ListView.separated(
             controller: _scrollController,
             physics: widget.physics,
@@ -128,8 +129,10 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
             itemBuilder: (context, index) {
               if (enableLoadMore) {
                 if (index == widget.itemCount) {
+                  Widget child = widget.loadMoreViewBuilder(context, state);
                   if (state == LoadMoreState.Error) {
-                    return GestureDetector(
+                    child = GestureDetector(
+                        key: _moreViewKey,
                         behavior: HitTestBehavior.translucent,
                         onTap: () {
                           setState(() {
@@ -137,9 +140,11 @@ class _LoadMoreListViewState extends State<LoadMoreListView> {
                             _loadMore();
                           });
                         },
-                        child: widget.loadMoreViewBuilder(context, state));
+                        child: child);
+                  } else {
+                    child = Container(key: _moreViewKey, child: child);
                   }
-                  return widget.loadMoreViewBuilder(context, state);
+                  return child;
                 }
               }
               return widget.itemBuilder(context, index);

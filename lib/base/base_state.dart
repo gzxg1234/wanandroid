@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:wanandroid/app/event_bus.dart';
 
 mixin BaseStateMixin<T extends StatefulWidget> on State<T> {
   final List<Function> _invokeOnDispose = [];
   bool _afterInitStateInvoked = false;
+  @protected
+  final CancelToken cancelToken = CancelToken();
 
   void afterInitState() {}
 
@@ -18,6 +21,7 @@ mixin BaseStateMixin<T extends StatefulWidget> on State<T> {
 
   @override
   void dispose() {
+    cancelToken.cancel();
     _invokeOnDispose.forEach((e) => e());
     super.dispose();
   }
@@ -28,5 +32,5 @@ mixin BaseStateMixin<T extends StatefulWidget> on State<T> {
 
   void invokeOnDispose(Function function) {
     _invokeOnDispose.add(function);
-}
+  }
 }

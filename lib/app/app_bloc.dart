@@ -1,7 +1,7 @@
 import 'package:wanandroid/app/themes.dart';
-import 'package:wanandroid/base/base_view_model.dart';
+import 'package:wanandroid/base/base_bloc.dart';
 
-class AppBloc extends BaseViewModel {
+class AppBloc extends BaseBloc {
   AppTheme _theme = AppTheme();
 
   AppTheme get theme => _theme;

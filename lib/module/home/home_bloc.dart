@@ -2,29 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:wanandroid/base/base_view_model.dart';
+import 'package:wanandroid/base/base_bloc.dart';
 import 'package:wanandroid/component/multi_state_widget.dart';
 import 'package:wanandroid/data/bean/article_entity.dart';
 import 'package:wanandroid/data/bean/banner_entity.dart';
 import 'package:wanandroid/data/bean/page_data.dart';
+import 'package:wanandroid/data/repo.dart';
 import 'package:wanandroid/util/utils.dart';
 import 'package:wanandroid/widget/load_more_list_view.dart';
 
-class HomeBannerState {
-  List<BannerEntity> list;
-  int index;
-
-  HomeBannerState([this.list, this.index]);
-
-  HomeBannerState clone() {
-    return HomeBannerState(this.list, this.index);
-  }
-}
-
-class HomeVM extends BaseViewModel {
+class HomeBloc extends BaseBloc {
   ValueNotifier<StateValue> _state = ValueNotifier(StateValue.Loading);
   ValueNotifier<List<ArticleEntity>> _list = ValueNotifier([]);
-  ValueNotifier<HomeBannerState> _bannerState = ValueNotifier(HomeBannerState([],0));
+
+  //banner和指示器分开通知，减少banner的rebuild
+  final ChangeNotifier bannerNotifier = ChangeNotifier();
+  final ChangeNotifier bannerIndicatorNotifier = ChangeNotifier();
+  List<BannerEntity> bannerList;
+  int bannerIndex;
 
   Timer autoTurningTimer;
 
@@ -33,8 +28,6 @@ class HomeVM extends BaseViewModel {
   ValueListenable<StateValue> get state => _state;
 
   ValueListenable<List<ArticleEntity>> get list => _list;
-
-  ValueListenable<HomeBannerState> get bannerState => _bannerState;
 
   @override
   void initial() {
@@ -53,9 +46,9 @@ class HomeVM extends BaseViewModel {
 
     List homeData;
     try {
-      homeData = await repo.getHomeData(page);
+      homeData = await ApiClient.getHomeData(page, cancelToken);
     } catch (e) {
-      toastMsg(Utils.getErrorMsg(e,"加载失败"));
+      toastMsg(Utils.getErrorMsg(e, "加载失败"));
       if (reload) {
         _state.value = StateValue.Error;
       }
@@ -64,9 +57,9 @@ class HomeVM extends BaseViewModel {
 
     _page = page;
     if (page == 0) {
-      _bannerState.value = _bannerState.value.clone()
-      ..list = homeData[0] ?? []
-      ..index = 0;
+      bannerList = homeData[0] ?? [];
+      bannerIndex = 0;
+      bannerNotifier.notifyListeners();
     }
 
     PageData<ArticleEntity> articleData = homeData[1];
@@ -93,7 +86,7 @@ class HomeVM extends BaseViewModel {
   }
 
   void bannerChanged(int value) {
-    _bannerState.value = _bannerState.value.clone()
-    ..index = value;
+    bannerIndex = value;
+    bannerIndicatorNotifier.notifyListeners();
   }
 }

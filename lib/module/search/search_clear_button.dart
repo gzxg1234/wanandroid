@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wanandroid/base/base_state.dart';
 import 'package:wanandroid/util/auto_size.dart';
 import 'package:wanandroid/widget/common_button.dart';
 
@@ -17,7 +18,7 @@ class HistoryClearButton extends StatefulWidget {
 }
 
 class HistoryClearButtonState extends State<HistoryClearButton>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin,BaseStateMixin {
   AnimationController _animationController;
   Animation<Offset> _slideAnimation;
   Animation<Color> _bgColorAnimation;
@@ -31,10 +32,15 @@ class HistoryClearButtonState extends State<HistoryClearButton>
     _slideAnimation = Tween<Offset>(begin: Offset(0.5, 0), end: Offset(0, 0))
         .animate(CurvedAnimation(
             parent: _animationController, curve: Curves.linear));
+  }
+
+  @override
+  void afterInitState() {
+    super.afterInitState();
     _bgColorAnimation = ColorTween(
-            begin: Colors.grey[100].withOpacity(0), end: Colors.grey[100])
+        begin: MyApp.getTheme(context).tagBgColor.withOpacity(0), end: MyApp.getTheme(context).tagBgColor)
         .animate(CurvedAnimation(
-            parent: _animationController, curve: Curves.linear));
+        parent: _animationController, curve: Curves.linear));
   }
 
   @override
@@ -58,12 +64,14 @@ class HistoryClearButtonState extends State<HistoryClearButton>
   @override
   Widget build(BuildContext context) {
     return ClipRect(
-        child: SlideTransition(
-            position: _slideAnimation,
-            child: AnimatedBuilder(
-                animation: _bgColorAnimation,
-                builder: (context, _) {
-                  return CommonButton("清空全部",
+        child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, _) {
+              Offset offset = _slideAnimation.value;
+              return FractionalTranslation(
+                  translation: offset,
+                  transformHitTests: true,
+                  child: CommonButton("清空全部",
                       bgColor: _bgColorAnimation.value,
                       splashColor: Colors.transparent,
                       constraints: BoxConstraints.tightFor(height: sizeW(20)),
@@ -80,7 +88,7 @@ class HistoryClearButtonState extends State<HistoryClearButton>
                   },
                       textStyle: TextStyle(
                           fontSize: sizeW(13),
-                          color: MyApp.getTheme(context).textColorSecondary));
-                })));
+                          color: MyApp.getTheme(context).textColorSecondary)));
+            }));
   }
 }

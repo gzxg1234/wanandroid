@@ -21,7 +21,7 @@ import 'package:wanandroid/widget/pager_view_ext.dart';
 import 'package:wanandroid/widget/refresh_indicator_fix.dart';
 
 import '../../r.dart';
-import 'home_vm.dart';
+import 'home_bloc.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -38,7 +38,7 @@ class _State extends State<HomePage>
   @override
   bool get wantKeepAlive => true;
 
-  HomeVM _bloc;
+  HomeBloc _bloc;
 
   final GlobalKey<RefreshIndicatorFixState> _refreshIndicatorKey = GlobalKey();
 
@@ -51,6 +51,7 @@ class _State extends State<HomePage>
   @override
   void initState() {
     super.initState();
+    _bloc = HomeBloc();
     onEvent<MainTabReTapEvent>((e) {
       if (e.index == 0) {
         handleMainTabRepeatTap();
@@ -62,15 +63,15 @@ class _State extends State<HomePage>
   @override
   void afterInitState() {
     super.afterInitState();
-    Provider.of<HotWordVM>(context).refresh();
+    Provider.of<HotWordBloc>(context).refresh();
   }
 
   void handleMainTabRepeatTap() {
     if (_bloc.state.value == StateValue.Success) {
       if (_scrollController.offset == 0) {
-        EventBus.send(MainTabShowRefreshEvent(0, true));
+        EventBus.post(MainTabShowRefreshEvent(0, true));
         _refreshIndicatorKey.currentState.show().whenComplete(() {
-          EventBus.send(MainTabShowRefreshEvent(0, false));
+          EventBus.post(MainTabShowRefreshEvent(0, false));
         });
       } else {
         scrollToTop(_scrollController);
@@ -81,11 +82,11 @@ class _State extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BaseViewModelProvider<HomeVM>(
+    return BaseBlocProvider<HomeBloc>(
       viewModelBuilder: (context) {
-        return _bloc = HomeVM();
+        return _bloc;
       },
-      child: Consumer<HomeVM>(
+      child: Consumer<HomeBloc>(
         builder: (context, bloc, _) {
           return Semantics(
             child: Material(
@@ -115,7 +116,7 @@ class _State extends State<HomePage>
     );
   }
 
-  Widget buildTopBar(BuildContext context, HomeVM bloc) {
+  Widget buildTopBar(BuildContext context, HomeBloc bloc) {
     return DecoratedBox(
       decoration: BoxDecoration(color: MyApp.getTheme(context).primaryColor),
       child: SafeArea(
@@ -129,7 +130,7 @@ class _State extends State<HomePage>
                 image: AssetImage(R.assetsImgLogo),
                 height: sizeW(30),
                 fit: BoxFit.fitHeight,
-                color: MyApp.getTheme(context).iconColor,
+                color: MyApp.getTheme(context).appBarTextIconColor,
               ),
               Expanded(
                 child: GestureDetector(
@@ -151,7 +152,7 @@ class _State extends State<HomePage>
                                 .textColorPrimaryInverse),
                         ValueListenableBuilder<List<HotWordEntity>>(
                           valueListenable:
-                              Provider.of<HotWordVM>(context).hotWordList,
+                              Provider.of<HotWordBloc>(context).hotWordList,
                           builder: (context, list, _) {
                             String wordString =
                                 list.map((e) => e.name).toList().join(",");
@@ -179,7 +180,7 @@ class _State extends State<HomePage>
     );
   }
 
-  Widget buildContent(BuildContext context, HomeVM bloc) {
+  Widget buildContent(BuildContext context, HomeBloc bloc) {
     return RefreshIndicatorFix(
       key: _refreshIndicatorKey,
       displacement: sizeW(40),
@@ -187,112 +188,105 @@ class _State extends State<HomePage>
       child: ValueListenableBuilder<List<ArticleEntity>>(
           valueListenable: bloc.list,
           builder: (context, list, _) {
-            return LoadMoreListView(
-              padding: EdgeInsets.zero,
-              scrollController: _scrollController,
-              itemCount: list.length + 1,
-              loadMoreCallback: () {
-                return bloc.loadMore();
-              },
-              separatorBuilder: (c, index) => SizedBox(
-                height: sizeW(10),
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                  color: MyApp.getTheme(context).listBackgroundColor),
+              child: LoadMoreListView(
+                padding: EdgeInsets.zero,
+                scrollController: _scrollController,
+                itemCount: list.length + 1,
+                loadMoreCallback: () {
+                  return bloc.loadMore();
+                },
+                separatorBuilder: (c, index) => SizedBox(
+                  height: sizeW(10),
+                ),
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return buildBanner(bloc);
+                  }
+                  var item = list[index - 1];
+                  return Container(
+                      margin: EdgeInsets.symmetric(horizontal: sizeW(12)),
+                      child: ArticleItem(item, showFlag: true));
+                },
+                loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
               ),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return buildBanner(bloc);
-                }
-                var item = list[index - 1];
-                return Container(
-                    margin: EdgeInsets.symmetric(horizontal: sizeW(12)),
-                    child: ArticleItem(item, showFlag: true));
-              },
-              loadMoreViewBuilder: createBaseLoadMoreViewBuilder(),
             );
           }),
     );
   }
 
-  Widget buildBanner(HomeVM vm) {
-    return Column(
-      children: <Widget>[
-        Padding(
+  Widget buildBanner(HomeBloc bloc) {
+    return Column(children: <Widget>[
+      Padding(
           padding: EdgeInsets.only(top: sizeW(16)),
           child: AspectRatio(
-            aspectRatio: 2.2,
-            child: Stack(
-              children: <Widget>[
-                ValueListenableBuilder<HomeBannerState>(
-                    valueListenable: vm.bannerState,
-                    builder: (context, bannerState, child) {
+              aspectRatio: 2.2,
+              child: Stack(children: <Widget>[
+                ChangeNotifierProvider.value(
+                    value: bloc.bannerNotifier,
+                    child:
+                        Consumer<ChangeNotifier>(builder: (context, __, ___) {
                       _pageControllerExt = ViewPagerController(
-                          itemCount: bannerState.list.length,
+                          itemCount: bloc.bannerList.length,
                           cycle: true,
-                          initialPage: bannerState.index);
+                          initialPage: bloc.bannerIndex);
                       return ViewPager(
-                        //不用key,当列表长度或者index变化时没变化
-                        key: ObjectKey(bannerState.list),
-                        autoTurningTime: 5000,
-                        onPageChanged: vm.bannerChanged,
-                        controller: _pageControllerExt,
-                        itemBuilder: (context, index) {
-                          BannerEntity item = bannerState.list[index];
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(context, Routes.WEB,
-                                  arguments: {Routes.WEB_ARG_URL: item.url});
-                            },
-                            child: Semantics(
-                              button: false,
-                              label: item.title,
-                              child: ExcludeSemantics(
-                                child: Container(
-                                    margin: EdgeInsets.symmetric(
-                                        horizontal: sizeW(14)),
-                                    child: ClipRRect(
-                                      borderRadius:
-                                          BorderRadius.circular(sizeW(8)),
-                                      child: CachedNetworkImage(
-                                          imageUrl: item.imagePath,
-                                          fit: BoxFit.cover),
-                                    )),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    })
-              ],
-            ),
-          ),
-        ),
-        Padding(
-            padding: EdgeInsets.only(top: sizeW(8)),
-            child: ValueListenableBuilder<HomeBannerState>(
-              valueListenable: vm.bannerState,
-              builder: (context, bannerState, child) {
+                          key: ObjectKey(bloc.bannerList),
+                          autoTurningTime: 5000,
+                          onPageChanged: bloc.bannerChanged,
+                          controller: _pageControllerExt,
+                          itemBuilder: (context, index) {
+                            BannerEntity item = bloc.bannerList[index];
+                            return GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Routes.WEB,
+                                      arguments: {
+                                        Routes.WEB_ARG_URL: item.url
+                                      });
+                                },
+                                child: Semantics(
+                                    button: false,
+                                    label: item.title,
+                                    child: ExcludeSemantics(
+                                        child: Container(
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal: sizeW(14)),
+                                            child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        sizeW(8)),
+                                                child: CachedNetworkImage(
+                                                    imageUrl: item.imagePath,
+                                                    fit: BoxFit.cover))))));
+                          });
+                    }))
+              ]))),
+      Padding(
+          padding: EdgeInsets.only(top: sizeW(8)),
+          child: ChangeNotifierProvider.value(
+              value: bloc.bannerIndicatorNotifier,
+              child: Consumer<ChangeNotifier>(builder: (_, __, ___) {
                 return Center(
-                  child: PageIndicator(
-                    itemCount: bannerState.list.length,
-                    currentItem: bannerState.index,
-                    margin: sizeW(8),
-                    itemBuilder: (context, index, select) {
-                      return Container(
-                        width: sizeW(16),
-                        height: sizeW(4),
-                        decoration: BoxDecoration(
-                            color: select
-                                ? MyApp.getTheme(context)
-                                    .pageIndicatorActiveColor
-                                : MyApp.getTheme(context)
-                                    .pageIndicatorNormalColor,
-                            borderRadius: BorderRadius.circular(sizeW(2))),
-                      );
-                    },
-                  ),
-                );
-              },
-            ))
-      ],
-    );
+                    child: PageIndicator(
+                        itemCount: bloc.bannerList.length,
+                        currentItem: bloc.bannerIndex,
+                        margin: sizeW(8),
+                        itemBuilder: (context, index, select) {
+                          return Container(
+                              width: sizeW(16),
+                              height: sizeW(4),
+                              decoration: BoxDecoration(
+                                  color: select
+                                      ? MyApp.getTheme(context)
+                                          .pageIndicatorActiveColor
+                                      : MyApp.getTheme(context)
+                                          .pageIndicatorNormalColor,
+                                  borderRadius:
+                                      BorderRadius.circular(sizeW(2))));
+                        }));
+              })))
+    ]);
   }
 }

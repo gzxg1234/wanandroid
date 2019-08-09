@@ -2,25 +2,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:wanandroid/util/widget_utils.dart';
 
-import 'base_view_model.dart';
+import 'base_bloc.dart';
 
 typedef T ViewModelBuilder<T>(BuildContext context);
 
-class BaseViewModelProvider<T extends BaseViewModel> extends StatefulWidget {
+class BaseBlocProvider<T extends BaseBloc> extends StatefulWidget {
   final Widget child;
   final ViewModelBuilder viewModelBuilder;
   final Disposer<T> disposer;
 
-  BaseViewModelProvider({this.child, this.viewModelBuilder, this.disposer});
+  BaseBlocProvider({this.child, this.viewModelBuilder, this.disposer});
 
   @override
   State<StatefulWidget> createState() {
-    return BaseViewModelProviderState<T>();
+    return BaseBlocProviderState<T>();
   }
 }
 
-class BaseViewModelProviderState<T extends BaseViewModel>
-    extends State<BaseViewModelProvider<T>> {
+class BaseBlocProviderState<T extends BaseBloc>
+    extends State<BaseBlocProvider<T>> {
   T _vm;
   bool _initialized = false;
 

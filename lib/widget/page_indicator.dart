@@ -15,7 +15,6 @@ class PageIndicator extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return _State();
   }
 }
@@ -23,7 +22,6 @@ class PageIndicator extends StatefulWidget {
 class _State extends State<PageIndicator> {
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     List<Widget> children = [];
     for (int i = 0; i < widget.itemCount; i++) {
       children.add(Container(

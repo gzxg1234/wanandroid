@@ -19,7 +19,6 @@ void autoSize(double designWidth, double designHeight) {
 }
 
 void _calculateRatio() {
-  var window = WidgetsBinding.instance.window;
   _sizeRatio = Size(
     min(window.physicalSize.height, window.physicalSize.width) /
         window.devicePixelRatio /
